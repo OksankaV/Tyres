@@ -23,6 +23,7 @@ get '/' do
     erb :index
 end
 
+
 def filter_select(select, value, check_value, text)
     if value != check_value
         select = select + text
@@ -55,9 +56,9 @@ get '/tyres' do
     @detect_tyre_season = detect_season(params[:tyre_season])
     select_family = "select family_title from TyreModel,TyreFamily where TyreModel.family_id=TyreFamily.id"
     
-    if @tyre_brand_select != nil 
+    if @tyre_brand_select != nil and @tyre_brand_select != ""
         select_family = filter_select(select_family, @tyre_brand_select, Select_Array[3], " and TyreFamily.brand_title='" + @tyre_brand_select + "'")
-        select_family = filter_select(select_family, @tyre_family, Select_Array[4], " and TyreFamily.family_title='" + @tyre_family + "'")
+        select_family = filter_select(select_family, @tyre_family, Select_Array[4], " and TyreFamily.family_title='" + @tyre_family + "'") if @tyre_family != nil and @tyre_family != ""
     end
     
     if @tyre_brands_check != nil
@@ -74,11 +75,11 @@ get '/tyres' do
         select_family =  select_family + " ) "
     end
     
-    select_family = filter_select(select_family, @tyre_width, Select_Array[0], " and TyreModel.width=" + @tyre_width) if @tyre_width != nil
-    select_family = filter_select(select_family, @tyre_height, Select_Array[1], " and TyreModel.height=" + @tyre_height) if @tyre_height != nil
-    select_family = filter_select(select_family, @tyre_diameter, Select_Array[2], " and TyreModel.rim_diameter=" + @tyre_diameter) if @tyre_diameter != nil
+    select_family = filter_select(select_family, @tyre_width, Select_Array[0], " and TyreModel.width=" + @tyre_width) if @tyre_width != nil and @tyre_width != ""
+    select_family = filter_select(select_family, @tyre_height, Select_Array[1], " and TyreModel.height=" + @tyre_height) if @tyre_height != nil and @tyre_height != ""
+    select_family = filter_select(select_family, @tyre_diameter, Select_Array[2], " and TyreModel.rim_diameter=" + @tyre_diameter) if @tyre_diameter != nil and @tyre_diameter != ""
 
-    select_family = filter_select(select_family, @detect_tyre_season, Select_Array[5], " and TyreFamily.season='" + @detect_tyre_season + "'") if @detect_tyre_season != nil
+    select_family = filter_select(select_family, @detect_tyre_season, Select_Array[5], " and TyreFamily.season='" + @detect_tyre_season + "'") if @detect_tyre_season != nil and @detect_tyre_season != ""
     
     @xxx = select_family
 
@@ -103,6 +104,31 @@ get '/models' do
     erb :models
 end
 
+get '/:href_tyre_brand/family/:href_tyre_family' do
+    @tyre_brand = params[:tyre_brand]
+    @tyre_family = params[:tyre_family]
+    select_description = "select description from TyreFamily where brand_title='" + @tyre_brand.to_s + "' and family_title='" + @tyre_family.to_s + "'"
+    @description = db.execute(select_description)
+    
+    select_family_id = "select TyreFamily.id from TyreFamily where brand_title='" + @tyre_brand.to_s + "' and family_title='" + @tyre_family.to_s + "'"
+    
+    select_image = "select TyreFamily.image from TyreFamily where brand_title='" + @tyre_brand.to_s + "' and family_title='" + @tyre_family.to_s + "'"
+    @family_image = db.execute(select_image)
+
+    select_canonical_size = "select TyreModel.canonical_size from TyreModel where TyreModel.family_id=(" + select_family_id + ")"
+    canonical_size_array = db.execute(select_canonical_size).to_a
+
+    @article = {}
+    canonical_size_array.each do |canonical_size|
+        select_model_id = "select TyreModel.id from TyreModel where canonical_size='" + canonical_size.to_s + "' and family_id=(" + select_family_id +")"
+        select_price = "select max(TyreArticle.price) from TyreArticle where TyreArticle.model_id=(" + select_model_id + ")"
+        select_quantity = "select TyreArticle.quantity from TyreArticle where TyreArticle.model_id=(" + select_model_id + ") and TyreArticle.price=(" + select_price + ")"
+        @article[canonical_size] = [db.execute(select_price),db.execute(select_quantity)]
+    end
+    
+    erb :family
+end
+
 
 
 __END__
@@ -123,55 +149,56 @@ __END__
                     function(data) {$('select[name="tyre_family"]').html(data)}
                 );
             }  
+
         </script>    
     </head>
     <body>
         <ul>
-            <li><a href="/tyres">Шини</a></li>
+            <li><a href="/tyres?tyre_brand=">Шини</a></li>
             <li>Диски</li>
             <li><a href="/delivery">Доставка</a></li>
         <ul>
-        <form name="myform" method="GET" action="tyres">
+        <form name="search_tyre_form" method="GET" action="tyres">
             <select name="tyre_width">
-                <option value="Ширина">Ширина</option>
+                <option value="">Ширина</option>
                 <%Tyre_width_name.each do |tyre_width_name|%>  
-                    <option><%=tyre_width_name%></option>  
+                    <option value="<%=tyre_width_name%>"><%=tyre_width_name%></option>  
                 <%end%>   
             </select>
             <b>/</b>
             <select name="tyre_height">
-                <option value="Висота">Висота</option>
+                <option value="">Висота</option>
                 <%Tyre_height_name.each do |tyre_height_name|%>
-                    <option><%=tyre_height_name%></option>  
+                    <option value="<%=tyre_height_name%>"><%=tyre_height_name%></option>  
                 <%end%>   
             </select>
             <b>R</b>
-            <select name="tyre_diameter" value="Діаметр">
-                <option>Діаметр</option>
+            <select name="tyre_diameter">
+                <option value="">Діаметр</option>
                 <%Tyre_diameter_name.each do |tyre_diameter_name|%> 
-                    <option><%=tyre_diameter_name%></option>  
+                    <option value="<%=tyre_diameter_name%>"><%=tyre_diameter_name%></option>  
                 <%end%>   
             </select> 
             <br>
 
             <select name="tyre_brand" onChange="change_families()">
-                <option value="Виробник">Виробник</option>
+                <option value="">Виробник</option>
                 <%Tyre_brand_name.each do |tyre_brand_name|%>    
-                    <option><%=tyre_brand_name%></option>  
+                    <option value="<%=tyre_brand_name%>"><%=tyre_brand_name%></option>  
                 <%end%>
             </select>
              
             <select name="tyre_family">
-                <option value="Модель" selected>Модель</option>
+                <option value="" selected>Модель</option>
                 <%Tyre_family_name.each do |tyre_family_name|%>
-                    <option><%=tyre_family_name%></option> 
+                    <option value="<%=tyre_family_name%>"><%=tyre_family_name%></option> 
                 <%end%>
             </select> 
             <br>
             <select name="tyre_season">
-                <option value="Сезон">Сезон</option>
+                <option value="">Сезон</option>
                 <%Tyre_season.each do |tyre_season|%>  
-                    <option><%=tyre_season%></option>  
+                    <option value="<%=tyre_season%>"><%=tyre_season%></option>  
                 <%end%>
             </select>
             <br>
@@ -200,7 +227,7 @@ __END__
                 <%Tyre_brand_name.each do |tyre_brand_name|%>
                     <%if @tyre_brand_select.to_s == tyre_brand_name.to_s%>
                         <%check_value = true%>   
-                    <%elsif @tyre_brand_select.to_s == 'Виробник'%>
+                    <%elsif @tyre_brand_select.to_s == ""%>
                         <%check_value = true%>
                     <%else%> 
                         <%check_value = false%>   
@@ -234,45 +261,45 @@ __END__
             </ul> 
             <p><%=@xxx%></p>          
             <select name="tyre_width">
-                <option value="Ширина">Ширина</option>
+                <option value="">Ширина</option>
                 <%Tyre_width_name.each do |tyre_width_name|%>
                     <%if @tyre_width.to_s == tyre_width_name.to_s%>
-                        <option selected><%=tyre_width_name%></option>   
+                        <option value="<%=tyre_width_name%>" selected><%=tyre_width_name%></option>   
                      <%else%>    
-                        <option><%=tyre_width_name%></option>  
+                        <option value="<%=tyre_width_name%>"><%=tyre_width_name%></option>  
                     <%end%>
                 <%end%>     
             </select>
             <b>/</b>
             <select name="tyre_height">
-                <option value="Висота">Висота</option>
+                <option value="">Висота</option>
                 <%Tyre_height_name.each do |tyre_height_name|%>
                     <%if @tyre_height.to_s == tyre_height_name.to_s%>
-                        <option selected><%=tyre_height_name%></option>   
+                        <option value="<%=tyre_height_name%>" selected><%=tyre_height_name%></option>   
                     <%else%>    
-                        <option><%=tyre_height_name%></option>  
+                        <option value="<%=tyre_height_name%>"><%=tyre_height_name%></option>  
                     <%end%> 
                 <%end%>    
             </select>
             <b>R</b>
             <select name="tyre_diameter">
-                <option value="Діаметр">Діаметр</option>
+                <option value="">Діаметр</option>
                 <%Tyre_diameter_name.each do |tyre_diameter_name|%>
                     <%if @tyre_diameter.to_s == tyre_diameter_name.to_s%>
-                        <option selected><%=tyre_diameter_name%></option>   
+                        <option value="<%=tyre_diameter_name%>" selected><%=tyre_diameter_name%></option>   
                     <%else%>    
-                        <option><%=tyre_diameter_name%></option>  
+                        <option value="<%=tyre_diameter_name%>"><%=tyre_diameter_name%></option>  
                     <%end%> 
                 <%end%>    
             </select> 
 
             <select name="tyre_season">
-                <option value="Сезон">Сезон</option>
+                <option value="">Сезон</option>
                 <%Tyre_season.each do |tyre_season|%>
                     <%if @tyre_season.to_s == tyre_season.to_s%>
-                        <option selected><%=tyre_season%></option>   
+                        <option value="<%=tyre_season%>" selected><%=tyre_season%></option>   
                     <%else%>    
-                        <option><%=tyre_season%></option>  
+                        <option value="<%=tyre_season%>"><%=tyre_season%></option>  
                     <%end%> 
                <%end%>
             </select>
@@ -282,7 +309,9 @@ __END__
                 <p>Нічого не знайдено</p>
             <%else%>      
                 <%@select_brand_titles.sort{|a,b| a[1]<=>b[1]}.each do |family_title,brand_title|%>
-                    <li><%=brand_title%> - <%=family_title%></li>   
+                    <%href_brand_title = brand_title.to_s.gsub(/\s/,'_')%>
+                    <%href_family_title = family_title.to_s.gsub(/\s/,'_').gsub(/\//,'-')%>
+                    <li><a href="<%=href_brand_title%>/family/<%=href_family_title%>?tyre_brand=<%=brand_title%>&tyre_family=<%=family_title%>&href_tyre_brand=<%=href_brand_title%>&href_tyre_family=<%=href_family_title%>"><%=brand_title%> - <%=family_title%></a></li>   
                 <%end%> 
             <%end%> 
               
@@ -304,16 +333,35 @@ __END__
 
 @@ models
 
-<option value="Модель" selected>Модель</option>
+<option value="" selected>Модель</option>
 <%if @families.empty? %>
     <%Tyre_family_name.each do |tyre_family_name|%>
-        <option><%=tyre_family_name%></option> 
+        <option value="<%=tyre_family_name%>"><%=tyre_family_name%></option> 
     <%end%>
 <%else%>    
     <%@families.each do |family|%>
-        <option><%=family%></option>   
+        <option value="<%=family%>"><%=family%></option>   
     <%end%>
 <%end%>
+
+
+@@ family
+<html>
+    <head>
+        <title><%=@tyre_brand%>/<%=@tyre_family%></title>
+        <meta charset="utf-8" />
+    </head>
+    <body>
+    <%=@tyre_brand%>/<%=@tyre_family%>
+    <p>Опис:<br><%=@description%></p>
+    <img src="http://localhost:4567/Images/<%=@family_image%>">
+    <ul>Моделі:<br>
+        <%@article.each do |key,value|%>
+            <li><%=key%> Ціна моделі: <%=value[0]%> грн. Кількість: <%=value[1]%> </li>
+        <%end%>
+    </ul>    
+    </body>
+</html>
 
 
 
