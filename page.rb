@@ -3,9 +3,10 @@ require 'sinatra'
 require 'sqlite3'
 
 
-if File.exists?("tyres.db")
+if File.exists?("tyres.db") and File.mtime("tyres.db")>=File.mtime("db-dump.sql")
     db = SQLite3::Database.new("tyres.db")
 else 
+    Kernel.system("rm tyres.db") if File.exists?("tyres.db")
     Kernel.system("sqlite3 tyres.db < db-dump.sql")
     db = SQLite3::Database.new("tyres.db")    
 end    
@@ -46,25 +47,21 @@ end
 
 
 get '/tyres' do
-    @tyre_brand_select = params[:tyre_brand]
-    @tyre_brands_check = params[:item]
+    @tyre_brand = params[:tyre_brand].to_a if params[:tyre_brand] != nil
+    @tyre_brand = params[:item] if params[:item] != nil
     @tyre_width = params[:tyre_width]
     @tyre_height = params[:tyre_height]
     @tyre_diameter = params[:tyre_diameter]
     @tyre_family = params[:tyre_family]
     @tyre_season = params[:tyre_season]
     @detect_tyre_season = detect_season(params[:tyre_season])
-    select_family = "select family_title from TyreModel,TyreFamily where TyreModel.family_id=TyreFamily.id"
+    select_family = "select TyreFamily.id from TyreModel,TyreFamily where TyreModel.family_id=TyreFamily.id"
+    @xxx = @tyre_brand
     
-    if @tyre_brand_select != nil and @tyre_brand_select != ""
-        select_family = filter_select(select_family, @tyre_brand_select, Select_Array[3], " and TyreFamily.brand_title='" + @tyre_brand_select + "'")
-        select_family = filter_select(select_family, @tyre_family, Select_Array[4], " and TyreFamily.family_title='" + @tyre_family + "'") if @tyre_family != nil and @tyre_family != ""
-    end
-    
-    if @tyre_brands_check != nil
+    if @tyre_brand != nil and @tyre_brand.empty? == false
         i=0
         select_family =  select_family + " and ( "
-        @tyre_brands_check.each do |tyre_brands_check|
+        @tyre_brand.each do |tyre_brands_check|
             if i == 0
                 select_family = filter_select(select_family, tyre_brands_check, Select_Array[3], "TyreFamily.brand_title='" + tyre_brands_check.to_s + "'")
             else
@@ -83,12 +80,13 @@ get '/tyres' do
     
     @xxx = select_family
 
-    select_family_titles = db.execute(select_family).to_a.uniq
+    select_family_id = db.execute(select_family).to_a.uniq
     
-    @select_brand_titles = {}
-    select_family_titles.each do |select_family_title|
-        select_brand = "select brand_title from TyreFamily where family_title='" + select_family_title.to_s + "'"
-        @select_brand_titles[select_family_title] = (db.execute(select_brand))
+    @select_family = {}
+    select_family_id.each do |select_family|
+        select_family_title = "select family_title from TyreFamily where id='" + select_family.to_s + "'"
+        select_brand_title = "select brand_title from TyreFamily where id='" + select_family.to_s + "'"
+        @select_family[select_family] = ([db.execute(select_family_title),db.execute(select_brand_title)])
     end  
     erb :tyres
 end
@@ -99,12 +97,16 @@ end
 
 get '/models' do
     tyre_brand = params[:tyre_brand]
-    select = "select family_title from TyreFamily where brand_title='" + tyre_brand.to_s + "'" 
+    select = "select family_title from TyreFamily"
+    if tyre_brand.empty? == false
+        select = select + " where brand_title='" + tyre_brand.to_s + "'"
+    end
     @families = db.execute(select).to_a
     erb :models
 end
 
-get '/:href_tyre_brand/family/:href_tyre_family' do
+get '/family/:family_id' do
+    @family_id = params[:family_id]
     @tyre_brand = params[:tyre_brand]
     @tyre_family = params[:tyre_family]
     select_description = "select description from TyreFamily where brand_title='" + @tyre_brand.to_s + "' and family_title='" + @tyre_family.to_s + "'"
@@ -220,45 +222,16 @@ __END__
     
         <form method="GET" action="tyres"> 
         
-           <ul>Виробники 
-            
-            <%if @tyre_brand_select != nil %>
-                <%check_value = false%>
-                <%Tyre_brand_name.each do |tyre_brand_name|%>
-                    <%if @tyre_brand_select.to_s == tyre_brand_name.to_s%>
-                        <%check_value = true%>   
-                    <%elsif @tyre_brand_select.to_s == ""%>
-                        <%check_value = true%>
-                    <%else%> 
-                        <%check_value = false%>   
-                    <%end%>
-                    <%if check_value%> 
-                        <li><input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" checked><%=tyre_brand_name%></li>   
-                    <%else%>
-                        <li><input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" ><%=tyre_brand_name%></li>
-                    <%end%>    
-                <%end%>
-            <%else%>
-                <%Tyre_brand_name.each do |tyre_brand_name|%>
-                    <%check_value = false%>
-                    <%if @tyre_brands_check != nil%>
-                        <%if @tyre_brands_check.include?(tyre_brand_name.to_s)%>
-                            <%check_value = true%>
-                        <%else%> 
-                            <%check_value = false%>   
-                        <%end%>
-                    <%else%>
-                        <%check_value = false%> 
-                    <%end%>
-                    <%if check_value%> 
-                        <li><input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" checked><%=tyre_brand_name%></li>   
-                    <%else%>
-                        <li><input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" ><%=tyre_brand_name%></li>
-                    <%end%>     
-                <%end%>
+            <ul>Виробники  
+            <%Tyre_brand_name.each do |tyre_brand_name|%>
+                <%if @tyre_brand.include?(tyre_brand_name.to_s) or @tyre_brand.empty?%>
+                    <li><input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" checked><%=tyre_brand_name%></li>
+                <%else%> 
+                    <li><input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" ><%=tyre_brand_name%></li>   
+                <%end%>  
             <%end%>
-            
             </ul> 
+            
             <p><%=@xxx%></p>          
             <select name="tyre_width">
                 <option value="">Ширина</option>
@@ -305,13 +278,11 @@ __END__
             </select>
             <input type="submit" value="Пошук"/> 
             
-            <%if @select_brand_titles.empty?%>
+            <%if @select_family.empty?%>
                 <p>Нічого не знайдено</p>
             <%else%>      
-                <%@select_brand_titles.sort{|a,b| a[1]<=>b[1]}.each do |family_title,brand_title|%>
-                    <%href_brand_title = brand_title.to_s.gsub(/\s/,'_')%>
-                    <%href_family_title = family_title.to_s.gsub(/\s/,'_').gsub(/\//,'-')%>
-                    <li><a href="<%=href_brand_title%>/family/<%=href_family_title%>?tyre_brand=<%=brand_title%>&tyre_family=<%=family_title%>&href_tyre_brand=<%=href_brand_title%>&href_tyre_family=<%=href_family_title%>"><%=brand_title%> - <%=family_title%></a></li>   
+                <%@select_family.sort{|a,b| a[1]<=>b[1]}.each do |family_id,brand_family|%>
+                    <li><a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=brand_family[1]%>&tyre_family=<%=brand_family[0]%>"><%=brand_family[1]%> - <%=brand_family[0]%></a></li>   
                 <%end%> 
             <%end%> 
               
@@ -334,14 +305,8 @@ __END__
 @@ models
 
 <option value="" selected>Модель</option>
-<%if @families.empty? %>
-    <%Tyre_family_name.each do |tyre_family_name|%>
-        <option value="<%=tyre_family_name%>"><%=tyre_family_name%></option> 
-    <%end%>
-<%else%>    
-    <%@families.each do |family|%>
-        <option value="<%=family%>"><%=family%></option>   
-    <%end%>
+<%@families.each do |family|%>
+    <option value="<%=family%>"><%=family%></option>   
 <%end%>
 
 
@@ -354,7 +319,7 @@ __END__
     <body>
     <%=@tyre_brand%>/<%=@tyre_family%>
     <p>Опис:<br><%=@description%></p>
-    <img src="http://localhost:4567/Images/<%=@family_image%>">
+    <img src="/Images/<%=@family_image%>">
     <ul>Моделі:<br>
         <%@article.each do |key,value|%>
             <li><%=key%> Ціна моделі: <%=value[0]%> грн. Кількість: <%=value[1]%> </li>
@@ -362,6 +327,3 @@ __END__
     </ul>    
     </body>
 </html>
-
-
-
