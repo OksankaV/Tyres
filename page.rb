@@ -2,6 +2,7 @@ require 'rubygems'
 require 'sinatra'
 require 'sqlite3'
 
+enable :sessions
 
 if File.exists?("tyres.db") and File.mtime("tyres.db")>=File.mtime("db-dump.sql")
     db = SQLite3::Database.new("tyres.db")
@@ -18,6 +19,7 @@ Tyre_height_name = db.execute("select distinct height from TyreModel order by he
 Tyre_diameter_name = db.execute("select distinct rim_diameter from TyreModel order by rim_diameter asc").to_a
 Tyre_season = ["Зимові шини","Літні шини","Всесезоннні шини"]
 Select_Array = ['Ширина', 'Висота', 'Діаметр', 'Виробник', 'Модель', 'Сезон']
+Tyre_quantity = 4
 
 
 get '/' do
@@ -109,26 +111,73 @@ get '/family/:family_id' do
     @family_id = params[:family_id]
     @tyre_brand = params[:tyre_brand]
     @tyre_family = params[:tyre_family]
-    select_description = "select description from TyreFamily where brand_title='" + @tyre_brand.to_s + "' and family_title='" + @tyre_family.to_s + "'"
+    select_description = "select description from TyreFamily where id=" + @family_id
     @description = db.execute(select_description)
-    
-    select_family_id = "select TyreFamily.id from TyreFamily where brand_title='" + @tyre_brand.to_s + "' and family_title='" + @tyre_family.to_s + "'"
-    
-    select_image = "select TyreFamily.image from TyreFamily where brand_title='" + @tyre_brand.to_s + "' and family_title='" + @tyre_family.to_s + "'"
+   
+    select_image = "select image from TyreFamily where id=" + @family_id
     @family_image = db.execute(select_image)
 
-    select_canonical_size = "select TyreModel.canonical_size from TyreModel where TyreModel.family_id=(" + select_family_id + ")"
-    canonical_size_array = db.execute(select_canonical_size).to_a
+    select_model_id = "select id from TyreModel where family_id=(" + @family_id + ")"
+    model_id_array = db.execute(select_model_id).to_a
 
     @article = {}
-    canonical_size_array.each do |canonical_size|
-        select_model_id = "select TyreModel.id from TyreModel where canonical_size='" + canonical_size.to_s + "' and family_id=(" + select_family_id +")"
-        select_price = "select max(TyreArticle.price) from TyreArticle where TyreArticle.model_id=(" + select_model_id + ")"
-        select_quantity = "select TyreArticle.quantity from TyreArticle where TyreArticle.model_id=(" + select_model_id + ") and TyreArticle.price=(" + select_price + ")"
-        @article[canonical_size] = [db.execute(select_price),db.execute(select_quantity)]
+    model_id_array.each do |model_id|
+        select_canonical_size = "select canonical_size from TyreModel where id='" + model_id.to_s + "'"
+        select_price = "select max(price) from TyreArticle where model_id=(" + model_id.to_s + ")"
+        select_quantity = "select quantity from TyreArticle where model_id=(" + model_id.to_s + ") and price=(" + select_price + ")"
+        select_article_id = "select id from TyreArticle where model_id=(" + model_id.to_s + ") and price=(" + select_price + ") and quantity=(" + select_quantity + ")"
+        @article[db.execute(select_article_id)] = [db.execute(select_canonical_size).to_s,db.execute(select_price).to_s,db.execute(select_quantity).to_s]
     end
     
     erb :family
+end
+
+get '/shopping_cart' do
+    @form = params[:form]
+    @back_href = params[:back_href]
+    if @back_href == nil
+        @back_href = "/"
+    end 
+    if @form == "buy_form" 
+        article_id = params[:article_id] 
+        family_id = params[:family_id]
+        tyre_brand = params[:tyre_brand]
+        tyre_family = params[:tyre_family]
+        tyre_price = params[:tyre_price]
+        tyre_model = params[:tyre_model]
+        if session.has_key?(article_id)
+            old_session = session[article_id]
+            tyre_quantity= old_session[4].to_i + Tyre_quantity
+            tyre_price_quantity = tyre_price.to_f * tyre_quantity.to_i
+            session[article_id] = [tyre_brand,tyre_family,tyre_model,tyre_price,tyre_quantity,tyre_price_quantity]
+        else 
+            tyre_quantity = Tyre_quantity
+            tyre_price_quantity = tyre_price.to_f * tyre_quantity.to_i
+            session[article_id] = [tyre_brand,tyre_family,tyre_model,tyre_price,tyre_quantity,tyre_price_quantity]
+        end
+    end    
+    if @form == "cart_form"
+        session.each do |key,article|
+            article_quantity = params[("article-" + key.to_s).to_sym]
+            delete_article = params[("delete-" + key.to_s).to_sym]
+            article_price_quantity = article[3].to_f * article_quantity.to_i
+            session[key] = [article[0],article[1],article[2],article[3],article_quantity,article_price_quantity]
+            session.delete(key) if delete_article == key
+        end  
+    end 
+    
+    @all_quantity = 0
+    @all_price = 0.00
+    session.each_value do |article|
+        @all_quantity += article[4].to_i
+        @all_price += article[5].to_f  
+    end   
+    
+    erb :shopping_cart
+end
+
+get '/order' do
+    erb :order
 end
 
 
@@ -139,7 +188,7 @@ __END__
 <html>
     <head>
         <title>Main</title>
-        <meta charset="utf-8" />
+        <meta charset="utf-8">
         <script type="text/javascript" src="http://code.jquery.com/jquery.js"></script> 
         <script>
             function change_families()
@@ -159,7 +208,7 @@ __END__
             <li><a href="/tyres?tyre_brand=">Шини</a></li>
             <li>Диски</li>
             <li><a href="/delivery">Доставка</a></li>
-        <ul>
+        </ul>
         <form name="search_tyre_form" method="GET" action="tyres">
             <select name="tyre_width">
                 <option value="">Ширина</option>
@@ -205,7 +254,7 @@ __END__
             </select>
             <br>
             
-            <input type="submit" value="Пошук"/> 
+            <input type="submit" value="Пошук"> 
         </form>        
     </body>
 </html>
@@ -216,7 +265,7 @@ __END__
 <html>
     <head>
         <title>Tyres</title>
-        <meta charset="utf-8" />
+        <meta charset="utf-8">
     </head>
     <body>
     
@@ -276,7 +325,7 @@ __END__
                     <%end%> 
                <%end%>
             </select>
-            <input type="submit" value="Пошук"/> 
+            <input type="submit" value="Пошук"> 
             
             <%if @select_family.empty?%>
                 <p>Нічого не знайдено</p>
@@ -294,7 +343,7 @@ __END__
 <html>
     <head>
         <title>Delivery</title>
-        <meta charset="utf-8" />
+        <meta charset="utf-8">
     </head>
     <body>
          
@@ -314,16 +363,81 @@ __END__
 <html>
     <head>
         <title><%=@tyre_brand%>/<%=@tyre_family%></title>
-        <meta charset="utf-8" />
+        <meta charset="utf-8">
     </head>
     <body>
     <%=@tyre_brand%>/<%=@tyre_family%>
     <p>Опис:<br><%=@description%></p>
     <img src="/Images/<%=@family_image%>">
     <ul>Моделі:<br>
-        <%@article.each do |key,value|%>
-            <li><%=key%> Ціна моделі: <%=value[0]%> грн. Кількість: <%=value[1]%> </li>
+    
+        <%@article.each do |article_id,propetries|%>
+            <li>
+                <form name="buy_form" method="GET" action="/shopping_cart">
+                    <input name="form" type="hidden" value="buy_form">
+                    <%=propetries[0]%> Ціна моделі: <%=propetries[1]%> грн. Кількість: <%=propetries[2]%>
+                    <input name="tyre_brand" type="hidden" value="<%=@tyre_brand%>"> 
+                    <input name="tyre_family" type="hidden" value="<%=@tyre_family%>">
+                    <input name="tyre_model" type="hidden" value="<%=propetries[0]%>">
+                    <input name="tyre_price" type="hidden" value="<%=propetries[1]%>">
+                    <input name="family_id" type="hidden" value="<%=@family_id%>">
+                    <input name="article_id" type="hidden" value="<%=article_id%>">
+                    <input name="back_href" type="hidden" value="/family/<%=@family_id%>?family_id=<%=@family_id%>&tyre_brand=<%=@tyre_brand%>&tyre_family=<%=@tyre_family%>">
+                    <%if propetries[2].to_i > 0%>
+                        <input type="submit" value="Купити">
+                    <%else%>
+                         <b>Немає в наявності</b>
+                    <%end%>
+
+                </form> 
+            </li>
         <%end%>
+     
     </ul>    
+    </body>
+</html>
+
+@@ shopping_cart
+<html>
+    <head>
+        <title>Кошик</title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <form name="cart_form" method="GET" action="">
+            <input name="form" type="hidden" value="cart_form">
+            <%session.sort{|a,b| a[1]<=>b[1]}.each do |key,article|%>
+                <p>
+                    Товар <%=article[0]%> - <%=article[1]%> - <%=article[2]%> Ціна: <%=article[3]%>  
+                    Кількість: <input name="article-<%=key%>" type="text" value="<%=article[4]%>"> Всьго: <%=article[5]%> 
+                    <input name="delete-<%=key%>" type="checkbox" value="<%=key%>">Видалити     
+                </p>    
+            <%end%>
+            Всього товарів: <%=@all_quantity%> на суму <%=@all_price%> грн.
+            <input name="back_href" type="hidden" value="<%=@back_href%>">
+            <input type="submit" value="Перерахувати">
+        </form>
+        <a href="<%=@back_href%>">Повернутися до покупок</a>
+        <a href='/order'>Оформити замовлення</a>   
+    </body>
+</html>
+
+@@ order
+<html>
+    <head>
+        <title>Замовлення</title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <form name="order" method="GET" action="">
+            <p><b>Оформити замовлення</b></p>
+            <p>Ім'я</p><input name="customer_name" type="text" required>
+            <p>Прізвище</p><input name="customer_surname" type="text" required>
+            <p>Адреса</p><input name="customer_address" type="text" required>
+            <p>Електронна адреса</p><input name="customer_email" type="text" required>
+            <p>Телефон</p><input name="customer_telephone" type="text" required>
+            <p><a href="shopping_cart">Повернутися до кошика</a>
+            <input type="submit" value="Замовити"></p>
+        </form>
     </body>
 </html>
