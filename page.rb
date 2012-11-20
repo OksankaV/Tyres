@@ -215,6 +215,8 @@ end
 
 get '/article_family' do
     tyre_brand = params[:tyre_brand]
+    p all_brand = params[:tyre_brands]
+    p all_families = params[:tyre_families]
     
     if tyre_brand.empty?
         @families = db.execute("select family_title from TyreFamily").flatten
@@ -253,6 +255,19 @@ get '/article_provider' do
     erb :article_provider
 end
 
+get '/detect_article_id' do
+    @old_id = params[:old_id ]
+    tyre_brand = params[:tyre_brand]
+    tyre_family = params[:tyre_family]
+    tyre_model = params[:tyre_model]
+    tyre_provider = params[:tyre_provider]
+   
+    if tyre_provider.empty? == false
+        @detected_article_id = db.execute("select id from TyreArticle where provider_id=? and model_id=(select id from TyreModel where canonical_size=? and family_id=(select id from TyreFamily where brand_title=? and family_title=?))", [tyre_provider, tyre_model, tyre_brand, tyre_family]).flatten.first.to_i
+    end
+    erb :detect_article_id
+end
+
 get '/orders_elements/:id' do
     @order_id = params[:id]
     @form = params[:form]   
@@ -262,7 +277,7 @@ get '/orders_elements/:id' do
         select_articles_id.each do |select_article_id|
             tyre_quantity_param = params[("quantity_" + select_article_id.to_s).to_sym].to_i
             db.execute("update OrdersElements set quantity=? where article_id=? and order_id=?", [tyre_quantity_param, select_article_id, @order_id]).flatten
-            article_id_param = params[("article_" + select_article_id.to_s).to_sym].to_i
+            article_id_param = params[("article_id_" + select_article_id.to_s).to_sym].to_i
             tyre_brand_param = params[("tyre_brand_" + select_article_id.to_s).to_sym]
             tyre_family_param = params[("tyre_family_" + select_article_id.to_s).to_sym]
             tyre_model_param = params[("tyre_model_" + select_article_id.to_s).to_sym]
@@ -565,7 +580,7 @@ __END__
             {
 	            var form = document.cart_form;
 	            
-	            for (i=0; i<=form.length; i++)
+	            for (i=0; i<form.length; i++)
 	            {
                     if ((form.elements[i].type == "text") && (form.elements[i].value == 0 || form.elements[i].value == ""))
                     {
@@ -639,7 +654,7 @@ __END__
             {
 	            var form = document.order_table_form;
 	            
-	            for (i=0; i<=form.length; i++)
+	            for (i=0; i<form.length; i++)
 	            {
                     if ( form.elements[i].value == "" &&  /customer_name_/.test(form.elements[i].name) == true)
                     {
@@ -741,6 +756,10 @@ __END__
     <option value="<%=id%>"><%=provider%></option>   
 <%end%>
 
+@@ detect_article_id
+<input name="article_id_<%=@old_id%>" type="hidden" value="<%=@detected_article_id%>">
+
+
 @@ orders_elements
 <html>
     <head>
@@ -749,7 +768,24 @@ __END__
         <script type="text/javascript" src="http://code.jquery.com/jquery.js"></script> 
         <script>
             function change_families(row_index, check_value)
-            {       
+            { 
+                var all_brands = new Array();
+                var all_families = new Array();
+                var form = document.one_order_form;
+	            for (i=0; i<form.length; i++)
+	            {  
+                    if ((form.elements[i].value !== "") && ((/tyre_brand_/.test(form.elements[i].name) == true) || (/new_tyre_brand/.test(form.elements[i].name) == true)))
+                    {
+                        all_brands.push(form.elements[i].value);
+                    }  
+                    if ((form.elements[i].value !== "") && ((/tyre_family_/.test(form.elements[i].name) == true) || (/new_tyre_family/.test(form.elements[i].name) == true)))
+                    {
+                        all_families.push(form.elements[i].value);
+                    } 
+                }
+                
+                
+                     
                 if (check_value == 0)
                 {
                     var brand_select = "select[name='tyre_brand_" + row_index + "']"
@@ -764,7 +800,7 @@ __END__
                 }
                 $.get(
                     "/article_family",
-                    {tyre_brand: brand},
+                    {tyre_brand: brand, tyre_brands: all_brands, tyre_families: all_families},
                     function(data) {$(family_select).html(data)}
                 );
                 change_models(row_index, check_value);
@@ -854,8 +890,9 @@ __END__
             
             function validate_form()
             {
+                var all_articles_id = new Array();
 	            var form = document.one_order_form;
-	            for (i=0; i<=form.length; i++)
+	            for (i=0; i<form.length; i++)
 	            {
                     if ( form.elements[i].value == "")
                     {
@@ -876,9 +913,43 @@ __END__
                         }
                     }
                     
+                    if ((form.elements[i].value != "") && (/article_/.test(form.elements[i].name) == true))
+                    {
+                        for (j=0; j<all_articles_id.length; j++)
+                        {
+                            if (all_articles_id[j] == form.elements[i].value)
+                            {
+                                alert ( "Вже є такий товар" + all_articles_id );
+                                return false;
+                            }
+                        } 
+   
+                        all_articles_id.push(form.elements[i].value);
+                        
+                    }
+                    
                 }
                 
                 return true;
+            }
+            
+            function detect_article_id(row_index)
+            {
+                    var brand_select = "select[name='tyre_brand_" + row_index + "']"
+                    var family_select = "select[name='tyre_family_" + row_index + "']"
+                    var model_select = "select[name='tyre_model_" + row_index + "']"
+                    var provider_select = "select[name='tyre_provider_" + row_index + "']"
+                    var article_id = "div[name='article_id_" + row_index + "']"
+                    var brand = $(brand_select).val();
+                    var family = $(family_select).val();
+                    var model = $(model_select).val();
+                    var provider = $(provider_select).val();
+              
+                $.get(
+                    "/detect_article_id",
+                    {old_id: row_index, tyre_brand: brand, tyre_family: family, tyre_model: model, tyre_provider: provider},
+                    function(data) {$(article_id).html(data)}
+                );
             }
 
             
@@ -938,7 +1009,7 @@ __END__
                     </td>
                     <%elsif index == 3%>
                     <td>                        
-                        <select name="tyre_provider_<%=article_id%>">
+                        <select name="tyre_provider_<%=article_id%>" onchange="detect_article_id(<%=article_id%>)">
                         <%provider_value = @provider_value[article_id]%>
                             <%provider_value.sort.each do |tyre_provider_id,tyre_provider_title|%>
                                 <%if article_data[index] == tyre_provider_id%>
@@ -957,7 +1028,7 @@ __END__
                 <%end%>
                 <td><input name="delete_<%=article_id%>" type="checkbox" value="<%=article_id%>"></td>
                 </tr>
-                <input name="article_<%=article_id%>" type="hidden" value="<%=article_id%>">
+                <div name="article_id_<%=article_id%>"><input name="article_id_<%=article_id%>" type="hidden" value="<%=article_id%>"></div>
             <%end%>
             </tbody>
             </table>
