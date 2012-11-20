@@ -165,10 +165,6 @@ get '/shopping_cart' do
 end
 
 get '/order' do
-    erb :order
-end
-
-get '/orders_table' do
     @form = params[:form]   
     if @form == "order_form" 
         customer_name = params[:customer_name]
@@ -185,6 +181,11 @@ get '/orders_table' do
             db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(?,?,?,?)", [order_id, article_id, propetries[3], propetries[4]])    
         end
     end
+    erb :order
+end
+
+get '/orders_table' do
+    @form = params[:form]   
     if @form == "order_table_form"
         orders_id = db.execute("select id from Orders").flatten
         orders_id.each do |order_id|
@@ -613,7 +614,7 @@ __END__
         <meta charset="utf-8">
     </head>
     <body>
-        <form name="order" method="GET" action="/orders_table">
+        <form name="order" method="GET" action="" onsubmit="alert('Замовлення відправлено')">
             <input name="form" type="hidden" value="order_form">
             <p><b>Оформити замовлення</b></p>
             <p>Імя</p><input name="customer_name" type="text" required>
