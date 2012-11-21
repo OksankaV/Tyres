@@ -214,9 +214,7 @@ get '/orders_table' do
 end
 
 get '/article_family' do
-    tyre_brand = params[:tyre_brand]
-    p all_brand = params[:tyre_brands]
-    p all_families = params[:tyre_families]
+    p tyre_brand = params[:tyre_brand]
     
     if tyre_brand.empty?
         @families = db.execute("select family_title from TyreFamily").flatten
@@ -256,7 +254,7 @@ get '/article_provider' do
 end
 
 get '/detect_article_id' do
-    @old_id = params[:old_id ]
+    @old_id = params[:old_id]
     tyre_brand = params[:tyre_brand]
     tyre_family = params[:tyre_family]
     tyre_model = params[:tyre_model]
@@ -272,56 +270,23 @@ get '/orders_elements/:id' do
     @order_id = params[:id]
     @form = params[:form]   
     if @form == "one_order_form"
-        
-        select_articles_id = db.execute("select article_id from OrdersElements where order_id=?",@order_id).flatten
-        select_articles_id.each do |select_article_id|
-            tyre_quantity_param = params[("quantity_" + select_article_id.to_s).to_sym].to_i
-            db.execute("update OrdersElements set quantity=? where article_id=? and order_id=?", [tyre_quantity_param, select_article_id, @order_id]).flatten
-            article_id_param = params[("article_id_" + select_article_id.to_s).to_sym].to_i
-            tyre_brand_param = params[("tyre_brand_" + select_article_id.to_s).to_sym]
-            tyre_family_param = params[("tyre_family_" + select_article_id.to_s).to_sym]
-            tyre_model_param = params[("tyre_model_" + select_article_id.to_s).to_sym]
-            tyre_provider_param = params[("tyre_provider_" + select_article_id.to_s).to_sym].to_i
-                       
-            new_article_id = db.execute("select id from TyreArticle where provider_id=? and model_id=(select id from TyreModel where canonical_size=? and family_id=(select id from TyreFamily where brand_title=? and family_title=?))", [tyre_provider_param, tyre_model_param, tyre_brand_param, tyre_family_param]).flatten.first.to_i
-            
-            new_tyre_price = db.execute("select price from TyreArticle where id=?", new_article_id).flatten.first
-
-            if ((article_id_param != new_article_id) and (new_tyre_price != nil))
-                db.execute("delete from OrdersElements where article_id=? and order_id=?", [ select_article_id, @order_id]).flatten
-                db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(?,?,?,?)", [@order_id, new_article_id, new_tyre_price, tyre_quantity_param])    
-            end
-            
-            delete_article = params[("delete_" + select_article_id.to_s).to_sym]
-            if delete_article == select_article_id.to_s
-                db.execute("delete from OrdersElements where article_id=? and order_id=?", [new_article_id,@order_id]).flatten
-            end
-        end  
-        
-        check_articles_id = db.execute("select article_id from OrdersElements where order_id=?",@order_id).flatten
-        add_aricle_array = params[:add_aricle]
-        if add_aricle_array != nil
-            add_tyre_brands = params[:new_tyre_brand]
-            add_tyre_families = params[:new_tyre_family]
-            add_tyre_models = params[:new_tyre_model]
-            add_tyre_providers = params[:new_tyre_provider]
-            add_tyre_quantity = params[:new_quantity]
-            new_delete_article = params[:new_delete]
-            
-            add_aricle_array.each_key do |key|
-                add_tyre_article_id = db.execute("select id from TyreArticle where provider_id=? and model_id=(select id from TyreModel where canonical_size=? and family_id=(select id from TyreFamily where brand_title=? and family_title=?))", [add_tyre_providers[key], add_tyre_models[key], add_tyre_brands[key], add_tyre_families[key]]).flatten.first.to_i
-                new_add_price = db.execute("select price from TyreArticle where id=?", add_tyre_article_id).flatten.first
-                if check_articles_id.include?(add_tyre_article_id) == false
-                    if new_delete_article == nil
-                        db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(?,?,?,?)", [@order_id, add_tyre_article_id, new_add_price, add_tyre_quantity[key]])
-                    else 
-                        db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(?,?,?,?)", [@order_id, add_tyre_article_id, new_add_price, add_tyre_quantity[key]]) if new_delete_article.has_key?(key) == false     
-                    end   
-                end     
-            end    
-        end  
+        db.execute("begin transaction")   
+        db.execute("delete from OrdersElements where order_id=?", @order_id).flatten
+        p article_id_params = params[:article_id]
+        p tyre_quantity_params = params[:quantity]
+        delete_article_params = params[:delete]
+        article_id_params.each do |old_id, new_id|
+            db.execute("update OrdersElements set quantity=? where article_id=? and order_id=?", [tyre_quantity_params[old_id].to_i, new_id.to_i, @order_id]).flatten 
+            new_tyre_price = db.execute("select price from TyreArticle where id=?", new_id.to_i).flatten.first 
+            if delete_article_params == nil
+                db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(?,?,?,?)", [@order_id, new_id.to_i, new_tyre_price, tyre_quantity_params[old_id].to_i])
+            elsif delete_article_params.has_value?(old_id) == false
+                db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(?,?,?,?)", [@order_id, new_id.to_i, new_tyre_price, tyre_quantity_params[old_id].to_i])        
+            end   
+        end
+        db.execute("commit")   
     end
-    
+   
     @customer_data = db.execute("select name,address,email,phone from Orders where id=?", @order_id)
     
     order_elements = db.execute("select article_id,price,quantity from OrdersElements where order_id=?", @order_id)
@@ -350,7 +315,7 @@ get '/orders_elements/:id' do
 end
 
 get '/add_order_element' do
-    @id = params[:id_param]
+    @id = "new_" + params[:id_param].to_s
     erb :add_order_element
 end
 
@@ -594,6 +559,10 @@ __END__
                         {
                             return false;
                         }
+                        else
+                        {
+                            return true;
+                        }
                     }
                     
                 }
@@ -672,6 +641,10 @@ __END__
                         if (delete_confirm == false)
                         {
                             return false;
+                        }
+                        else
+                        {
+                            return true;
                         }
                     }
                     
@@ -757,7 +730,7 @@ __END__
 <%end%>
 
 @@ detect_article_id
-<input name="article_id_<%=@old_id%>" type="hidden" value="<%=@detected_article_id%>">
+<input name="article_id[<%=@old_id%>]" type="hidden" value="<%=@detected_article_id%>">
 
 
 @@ orders_elements
@@ -767,94 +740,45 @@ __END__
         <meta charset="utf-8">
         <script type="text/javascript" src="http://code.jquery.com/jquery.js"></script> 
         <script>
-            function change_families(row_index, check_value)
+            function change_families(row_index)
             { 
-                var all_brands = new Array();
-                var all_families = new Array();
-                var form = document.one_order_form;
-	            for (i=0; i<form.length; i++)
-	            {  
-                    if ((form.elements[i].value !== "") && ((/tyre_brand_/.test(form.elements[i].name) == true) || (/new_tyre_brand/.test(form.elements[i].name) == true)))
-                    {
-                        all_brands.push(form.elements[i].value);
-                    }  
-                    if ((form.elements[i].value !== "") && ((/tyre_family_/.test(form.elements[i].name) == true) || (/new_tyre_family/.test(form.elements[i].name) == true)))
-                    {
-                        all_families.push(form.elements[i].value);
-                    } 
-                }
-                
-                
-                     
-                if (check_value == 0)
-                {
-                    var brand_select = "select[name='tyre_brand_" + row_index + "']"
-                    var family_select = "select[name='tyre_family_" + row_index + "']"
-                    var brand = $(brand_select).val();
-                }
-                else
-                {
-                    var brand_select = "select[name='new_tyre_brand[" + row_index + "]']"
-                    var family_select = "select[name='new_tyre_family[" + row_index + "]']"
-                    var brand = $(brand_select).val();
-                }
+                var brand_select = "select[name='tyre_brand[" + row_index + "]']"
+                var family_select = "select[name='tyre_family[" + row_index + "]']"
+                var brand = $(brand_select).val();
                 $.get(
                     "/article_family",
-                    {tyre_brand: brand, tyre_brands: all_brands, tyre_families: all_families},
+                    {tyre_brand: brand},
                     function(data) {$(family_select).html(data)}
                 );
-                change_models(row_index, check_value);
+                change_models(row_index);
             } 
             
-            function change_models(row_index, check_value)
+            function change_models(row_index)
             {
-                if (check_value == 0)
-                {
-                    var brand_select = "select[name='tyre_brand_" + row_index + "']"
-                    var family_select = "select[name='tyre_family_" + row_index + "']"
-                    var model_select = "select[name='tyre_model_" + row_index + "']"
-                    var brand = $(brand_select).val();
-                    var family = $(family_select).val();
-                }
-                else
-                {
-                    var brand_select = "select[name='new_tyre_brand[" + row_index + "]']"
-                    var family_select = "select[name='new_tyre_family[" + row_index + "]']"
-                    var model_select = "select[name='new_tyre_model[" + row_index + "]']"
-                    var brand = $(brand_select).val();
-                    var family = $(family_select).val();
-                }
+
+                var brand_select = "select[name='tyre_brand[" + row_index + "]']"
+                var family_select = "select[name='tyre_family[" + row_index + "]']"
+                var model_select = "select[name='tyre_model[" + row_index + "]']"
+                var brand = $(brand_select).val();
+                var family = $(family_select).val();
 
                 $.get(
                     "/article_model",
                     {tyre_brand: brand, tyre_family: family},
                     function(data) {$(model_select).html(data)}
                 );
-                change_providers(row_index, check_value);
+                change_providers(row_index);
             }  
             
-            function change_providers(row_index, check_value)
+            function change_providers(row_index)
             {
-                if (check_value == 0)
-                {
-                    var brand_select = "select[name='tyre_brand_" + row_index + "']"
-                    var family_select = "select[name='tyre_family_" + row_index + "']"
-                    var model_select = "select[name='tyre_model_" + row_index + "']"
-                    var provider_select = "select[name='tyre_provider_" + row_index + "']"
-                    var brand = $(brand_select).val();
-                    var family = $(family_select).val();
-                    var model = $(model_select).val();
-                }
-                else
-                {
-                    var brand_select = "select[name='new_tyre_brand[" + row_index + "]']"
-                    var family_select = "select[name='new_tyre_family[" + row_index + "]']"
-                    var model_select = "select[name='new_tyre_model[" + row_index + "]']"
-                    var provider_select = "select[name='new_tyre_provider[" + row_index + "]']"
-                    var brand = $(brand_select).val();
-                    var family = $(family_select).val();
-                    var model = $(model_select).val();
-                }
+                var brand_select = "select[name='tyre_brand[" + row_index + "]']"
+                var family_select = "select[name='tyre_family[" + row_index + "]']"
+                var model_select = "select[name='tyre_model[" + row_index + "]']"
+                var provider_select = "select[name='tyre_provider[" + row_index + "]']"
+                var brand = $(brand_select).val();
+                var family = $(family_select).val();
+                var model = $(model_select).val();
 
                 $.get(
                     "/article_provider",
@@ -890,60 +814,87 @@ __END__
             
             function validate_form()
             {
+                var all_selects = new Array();
+                var all_fields = new Array();
                 var all_articles_id = new Array();
+                var check_articles_id = new Array();
+                var delete_articles_id = new Array();
+                var rows;
 	            var form = document.one_order_form;
-	            for (i=0; i<form.length; i++)
+                rows = 0;
+	            for (i=4; i<=form.length-3; i+=7)
 	            {
-                    if ( form.elements[i].value == "")
-                    {
-                        alert ( "Заповніть всі елементи замовлення" );
-                        return false;
-                    }
-                    if (form.elements[i].type == "text" && form.elements[i].value == 0)
-                    {
-                        alert ( "Кількість товару не може бути 0" );
-                        return false;
-                    }
-                    if (form.elements[i].type == "checkbox" && form.elements[i].checked == true)
+	                rows += 1; 
+	                all_selects.push(form.elements[i].value)
+	                all_fields.push(form.elements[i+1].value) 
+	                if (form.elements[i+2].type == "checkbox")
+	                {
+	                    if (form.elements[i+2].checked == true)
+	                    {
+                            delete_articles_id.push(true)
+                        }
+                        else
+                        {
+                            delete_articles_id.push(false)
+                        }   
+                    }    
+                    all_articles_id.push(form.elements[i+3].value)
+                }
+                
+                for (i=0; i<rows; i++)
+	            {
+	                if (delete_articles_id[i] == true)
                     {
                         delete_confirm = confirm ( "Видалити виділені елементи замовлення?" );
                         if (delete_confirm == false)
                         {
                             return false;
                         }
-                    }
-                    
-                    if ((form.elements[i].value != "") && (/article_/.test(form.elements[i].name) == true))
-                    {
-                        for (j=0; j<all_articles_id.length; j++)
+                        else
                         {
-                            if (all_articles_id[j] == form.elements[i].value)
-                            {
-                                alert ( "Вже є такий товар" + all_articles_id );
-                                return false;
-                            }
-                        } 
-   
-                        all_articles_id.push(form.elements[i].value);
-                        
+                            return true;
+                        }
                     }
-                    
-                }
-                
+                    else
+                    {
+	                    if (all_selects[i] == "")
+                        {
+                            alert ( "Заповніть всі елементи замовлення" );
+                            return false;
+                        }
+                        if ((all_fields[i] == "") || (all_fields[i] == 0))
+                        {
+                            alert ( "Кількість товару не може бути 0" );
+                            return false;
+                        }
+                        if (all_articles_id[i] != "")
+                        {
+                            for (j=0; j<check_articles_id.length; j++)
+                            {
+                                if (check_articles_id[j] == all_articles_id[i])
+                                {
+                                    alert ( "Вже є такий товар");
+                                    return false;
+                                }
+                            } 
+                            check_articles_id.push(all_articles_id[i]);
+                        }
+                    }
+	            }
                 return true;
             }
             
             function detect_article_id(row_index)
             {
-                    var brand_select = "select[name='tyre_brand_" + row_index + "']"
-                    var family_select = "select[name='tyre_family_" + row_index + "']"
-                    var model_select = "select[name='tyre_model_" + row_index + "']"
-                    var provider_select = "select[name='tyre_provider_" + row_index + "']"
-                    var article_id = "div[name='article_id_" + row_index + "']"
-                    var brand = $(brand_select).val();
-                    var family = $(family_select).val();
-                    var model = $(model_select).val();
-                    var provider = $(provider_select).val();
+                var brand_select = "select[name='tyre_brand[" + row_index + "]']"
+                var family_select = "select[name='tyre_family[" + row_index + "]']"
+                var model_select = "select[name='tyre_model[" + row_index + "]']"
+                var provider_select = "select[name='tyre_provider[" + row_index + "]']"
+                var article_id = "div[name='article_id[" + row_index + "]']"
+                var brand = $(brand_select).val();
+                var family = $(family_select).val();
+                var model = $(model_select).val();
+                var provider = $(provider_select).val();
               
                 $.get(
                     "/detect_article_id",
@@ -975,7 +926,7 @@ __END__
                 <%article_data.each_index do |index|%>
                     <%if index == 0%>
                     <td>
-                        <select name="tyre_brand_<%=article_id%>" onchange="change_families(<%=article_id%>,0)">
+                        <select name="tyre_brand[<%=article_id%>]" onchange="change_families(<%=article_id%>)">
                             <%Tyre_brand_name.each do |tyre_brand_name|%>
                                 <%if article_data[index] == tyre_brand_name%>
                                     <option value="<%=tyre_brand_name%>" selected><%=tyre_brand_name%></option>
@@ -985,7 +936,7 @@ __END__
                             <%end%>
                         </select>
                     <%elsif index == 1%>      
-                        <select name="tyre_family_<%=article_id%>" onchange="change_models(<%=article_id%>,0)">
+                        <select name="tyre_family[<%=article_id%>]" onchange="change_models(<%=article_id%>)">
                             <%family_value = @family_value[article_id]%>
                             <%family_value.each do |tyre_family_name|%>
                                 <%if article_data[index] == tyre_family_name%>
@@ -996,7 +947,7 @@ __END__
                             <%end%>
                         </select>
                     <%elsif index == 2%>
-                        <select name="tyre_model_<%=article_id%>" onchange="change_providers(<%=article_id%>,0)">
+                        <select name="tyre_model[<%=article_id%>]" onchange="change_providers(<%=article_id%>)">
                         <%model_value = @model_value[article_id]%>
                             <%model_value.each do |tyre_canonical_size|%>
                                 <%if article_data[index] == tyre_canonical_size%>
@@ -1009,7 +960,7 @@ __END__
                     </td>
                     <%elsif index == 3%>
                     <td>                        
-                        <select name="tyre_provider_<%=article_id%>" onchange="detect_article_id(<%=article_id%>)">
+                        <select name="tyre_provider[<%=article_id%>]" onchange="detect_article_id(<%=article_id%>)">
                         <%provider_value = @provider_value[article_id]%>
                             <%provider_value.sort.each do |tyre_provider_id,tyre_provider_title|%>
                                 <%if article_data[index] == tyre_provider_id%>
@@ -1021,14 +972,18 @@ __END__
                         </select>      
                     </td>
                     <%elsif index == 5%>
-                        <td><input name="quantity_<%=article_id%>" type="text" value="<%=article_data[index].to_i%>" size="3"></td>      
+                        <td><input name="quantity[<%=article_id%>]" type="text" value="<%=article_data[index].to_i%>" size="3"></td>      
                     <%else%>
                         <td><%=article_data[index]%></td>
                     <%end%>
                 <%end%>
-                <td><input name="delete_<%=article_id%>" type="checkbox" value="<%=article_id%>"></td>
+                    <td>
+                        <input name="delete[<%=article_id%>]" type="checkbox" value="<%=article_id%>">
+                        <div name="article_id[<%=article_id%>]">
+                            <input name="article_id[<%=article_id%>]" type="hidden" value="<%=article_id%>">
+                        </div>
+                    </td>
                 </tr>
-                <div name="article_id_<%=article_id%>"><input name="article_id_<%=article_id%>" type="hidden" value="<%=article_id%>"></div>
             <%end%>
             </tbody>
             </table>
@@ -1041,20 +996,21 @@ __END__
 </html>
 
 @@ add_order_element
+
     <td>
-        <select name="new_tyre_brand[<%=@id%>]" onchange="change_families(<%=@id%>,1)">
+        <select name="tyre_brand[<%=@id%>]" onchange="change_families('<%=@id%>')">
             <option value="">Оберіть виробника</option>
             <%Tyre_brand_name.each do |tyre_brand_name|%>    
                 <option value="<%=tyre_brand_name%>"><%=tyre_brand_name%></option>  
             <%end%>
         </select>
-        <select name="new_tyre_family[<%=@id%>]" onchange="change_models(<%=@id%>,1)">
+        <select name="tyre_family[<%=@id%>]" onchange="change_models('<%=@id%>')">
             <option value="">Оберіть модель</option>
             <%Tyre_family_name.each do |tyre_family_name|%>    
                 <option value="<%=tyre_family_name%>"><%=tyre_family_name%></option>  
             <%end%>
         </select>
-        <select name="new_tyre_model[<%=@id%>]" onchange="change_providers(<%=@id%>,1)">
+        <select name="tyre_model[<%=@id%>]" onchange="change_providers('<%=@id%>')">
             <option value="">Оберіть розмір</option>
             <%Tyre_canonical_size.each do |tyre_model_name|%>    
                 <option value="<%=tyre_model_name%>"><%=tyre_model_name%></option>  
@@ -1062,7 +1018,7 @@ __END__
         </select>
     </td>
     <td>                        
-        <select name="new_tyre_provider[<%=@id%>]">
+        <select name="tyre_provider[<%=@id%>]" onchange="detect_article_id('<%=@id%>')">
             <option value="">Оберіть провайдера</option>
             <%Tyre_providers.each do |tyre_provider_id,tyre_provider_title|%>    
                 <option value="<%=tyre_provider_id%>"><%=tyre_provider_title%></option> 
@@ -1070,9 +1026,12 @@ __END__
         </select>      
     </td>
     <td>0.00</td>
-    <td><input name="new_quantity[<%=@id%>]" type="text" value="4" size="3"></td> 
-    <td><input name="new_delete[<%=@id%>]" type="checkbox" value="0" onclick="if (this.checked) return confirm('Видалити елемент замовлення?')"></td>
-    <input name="add_aricle[<%=@id%>]" type="hidden" value="<%=@id%>">
+    <td><input name="quantity[<%=@id%>]" type="text" value="4" size="3"></td> 
+    <td><input name="delete[<%=@id%>]" type="checkbox" value="<%=@id%>" >
+        <div name="article_id[<%=@id%>]">
+            <input name="article_id[<%=@id%>]" type="hidden" value="<%=@id%>">
+        </div>
+    </td>
 
 
 
