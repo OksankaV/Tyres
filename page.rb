@@ -539,22 +539,18 @@ __END__
     <head>
         <title>Кошик</title>
         <meta charset="utf-8">
-                <script>
-        
+        <script>
+
             function validate_form()
             {
-	            var form = document.cart_form;
-	            
-	            for (i=0; i<form.length; i++)
-	            {
-                    if ((form.elements[i].type == "text") && (form.elements[i].value == 0 || form.elements[i].value == ""))
+                var rows = document.getElementById("shoping_cart_table").rows;
+
+	            for (i=1; i<rows.length; i++)
+                {
+                    var cells = rows[i].cells;	
+                    if ((cells[4].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "checkbox") && (cells[4].getElementsByTagName("INPUT")[0].checked == true ))
                     {
-                        alert ( "Кількість товару не може бути 0" );
-                        return false;
-                    }
-                    if (form.elements[i].type == "checkbox" && form.elements[i].checked == true)
-                    { 
-                        delete_confirm = confirm("Видалити виділені елементи замовлення?");
+                        delete_confirm = confirm ( "Видалити виділені замовлення?" );
                         if (delete_confirm == false)
                         {
                             return false;
@@ -564,24 +560,40 @@ __END__
                             return true;
                         }
                     }
-                    
+                    else
+                    {                  
+                       if ((cells[2].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "text") && (cells[2].getElementsByTagName("INPUT")[0].value == ""))
+                       {
+                            alert ( "Кількість товару не може бути 0" );
+                            return false;
+                       } 
+                    } 
                 }
-                
-                return true;
             }
 
-           </script>  
+        </script>  
     </head>
     <body>
         <form name="cart_form" method="GET" action="" onsubmit="return validate_form()">
             <input name="form" type="hidden" value="cart_form">
+            <table id="shoping_cart_table" border="1">
+                <tr>
+                    <th>Товар</th>
+                    <th>Ціна за одиницю</th>
+                    <th>Кількість</th>
+                    <th>Загальна ціна товару</th>
+                    <th>Видалити</th>
+                </tr>
             <%session.sort{|a,b| a[1].first<=>b[1].first}.each do |key,article|%>
-                <p>
-                    Товар <%=article[0]%> - <%=article[1]%> - <%=article[2]%> Ціна: <%=article[3]%>  
-                    Кількість: <input name="article_<%=key%>" type="text" value="<%=article[4]%>"> Всьго: <%=article[5]%> 
-                    <input name="delete_<%=key%>" type="checkbox" value="<%=key%>">Видалити     
-                </p>    
+                <tr>
+                    <td><%=article[0]%> - <%=article[1]%> - <%=article[2]%></td>
+                    <td><%=article[3]%> грн.</td>
+                    <td><input name="article_<%=key%>" type="text" size="3" value="<%=article[4]%>"></td>
+                    <td><%=article[5]%> грн.</td>
+                    <td><input name="delete_<%=key%>" type="checkbox" value="<%=key%>"></td>    
+                </tr>    
             <%end%>
+            </table>
             Всього товарів: <%=@all_quantity%> на суму <%=@all_price%> грн.
             <input name="back_href" type="hidden" value="<%=@back_href%>">
             <input type="submit" value="Перерахувати">
