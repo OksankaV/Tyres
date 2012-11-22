@@ -621,23 +621,14 @@ __END__
         
             function validate_form()
             {
-	            var form = document.order_table_form;
-	            
-	            for (i=0; i<form.length; i++)
-	            {
-                    if ( form.elements[i].value == "" &&  /customer_name_/.test(form.elements[i].name) == true)
+                var rows = document.getElementById("orders_table").rows;
+
+	            for (i=1; i<rows.length; i++)
+                {
+                    var cells = rows[i].cells;	
+                    if ((cells[7].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "checkbox") && (cells[7].getElementsByTagName("INPUT")[0].checked == true ))
                     {
-                        alert ( "Заповніть і’мя покупця в замовленні" );
-                        return false;
-                    }
-                    if ( form.elements[i].value == "" &&  /customer_phone_/.test(form.elements[i].name) == true)
-                    {
-                        alert ( "Заповніть телефон покупця в замовленні" );
-                        return false;
-                    }
-                    if (form.elements[i].type == "checkbox" && form.elements[i].checked == true)
-                    { 
-                        delete_confirm = confirm("Видалити виділені замовлення?");
+                        delete_confirm = confirm ( "Видалити виділені замовлення?" );
                         if (delete_confirm == false)
                         {
                             return false;
@@ -647,10 +638,20 @@ __END__
                             return true;
                         }
                     }
-                    
+                    else
+                    {                  
+                       if ((cells[1].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "text") && (cells[1].getElementsByTagName("INPUT")[0].value == ""))
+                       {
+                            alert ("Заповніть і’мя покупця в замовленні");
+                            return false;
+                       } 
+                       if ((cells[4].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "text") && (cells[4].getElementsByTagName("INPUT")[0].value == ""))
+                       {
+                            alert ("Заповніть телефон покупця в замовленні");
+                            return false;
+                       }
+                    } 
                 }
-                
-                return true;
             }
 
         </script>   
@@ -660,20 +661,20 @@ __END__
         <p><b>Список замовлень</b></p>
         <form name="order_table_form" method="GET" action="" onsubmit="return validate_form()">
             <input name="form" type="hidden" value="order_table_form">
-            <table border="1">
+            <table id="orders_table" border="1">
                 <tr>
-                    <td>Номер</td>
-                    <td>Покупець</td>
-                    <td>Адреса</td>
-                    <td>Мило</td>
-                    <td>Телефон</td>
-                    <td>Дата</td>
-                    <td>Статус</td>
-                    <td>Видалити</td>
+                    <th>Номер</th>
+                    <th>Покупець</th>
+                    <th>Адреса</th>
+                    <th>Мило</th>
+                    <th>Телефон</th>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                    <th>Видалити</th>
                 </tr>
             <%@orders.sort.each do |order_id,order_data|%>
                 <tr>
-                    <td onclick="window.location.href='orders_elements/<%=order_id%>'"><%=order_id%></td>
+                    <td onclick="document.location.href='orders_elements/<%=order_id%>'"><%=order_id%></td>
                     <%order_data.each_index do |index|%>
                     <%if index == 0%> 
                         <td><input name="customer_name_<%=order_id%>" type="text"  type="text" value="<%=order_data[index]%>" size="10"></td> 
@@ -696,7 +697,7 @@ __END__
                             </select>    
                         </td>
                     <%else%>
-                        <td onclick="window.location.href='orders_elements/<%=order_id%>'"><%=order_data[index]%></td>
+                        <td onclick="document.location.href='orders_elements/<%=order_id%>'"><%=order_data[index]%></td>
                     <%end%>
                 <%end%>
                 <td><input name="delete_<%=order_id%>" type="checkbox" value="<%=order_id%>"></td>
