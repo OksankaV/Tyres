@@ -811,39 +811,16 @@ __END__
                 );
             } 
             
-            
+             
             function validate_form()
             {
-                var all_selects = new Array();
-                var all_fields = new Array();
-                var all_articles_id = new Array();
+                var rows = document.getElementById("order_elements_table").rows;
                 var check_articles_id = new Array();
-                var delete_articles_id = new Array();
-                var rows;
-	            var form = document.one_order_form;
-                rows = 0;
-	            for (i=4; i<=form.length-3; i+=7)
-	            {
-	                rows += 1; 
-	                all_selects.push(form.elements[i].value)
-	                all_fields.push(form.elements[i+1].value) 
-	                if (form.elements[i+2].type == "checkbox")
-	                {
-	                    if (form.elements[i+2].checked == true)
-	                    {
-                            delete_articles_id.push(true)
-                        }
-                        else
-                        {
-                            delete_articles_id.push(false)
-                        }   
-                    }    
-                    all_articles_id.push(form.elements[i+3].value)
-                }
-                
-                for (i=0; i<rows; i++)
-	            {
-	                if (delete_articles_id[i] == true)
+
+	            for (i=1; i<rows.length; i++)
+                {
+                    var cells = rows[i].cells;	
+                    if ((cells[4].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "checkbox") && (cells[4].getElementsByTagName("INPUT")[0].checked == true ))
                     {
                         delete_confirm = confirm ( "Видалити виділені елементи замовлення?" );
                         if (delete_confirm == false)
@@ -857,31 +834,30 @@ __END__
                     }
                     else
                     {
-	                    if (all_selects[i] == "")
-                        {
+                       if (cells[1].getElementsByTagName("SELECT")[0].value == "")
+                       {
                             alert ( "Заповніть всі елементи замовлення" );
                             return false;
-                        }
-                        if ((all_fields[i] == "") || (all_fields[i] == 0))
-                        {
+                       } 
+                       if ((cells[3].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "text") && ((cells[3].getElementsByTagName("INPUT")[0].value == "") || (cells[3].getElementsByTagName("INPUT")[0].value == 0)))
+                       {
                             alert ( "Кількість товару не може бути 0" );
                             return false;
-                        }
-                        if (all_articles_id[i] != "")
+                       } 
+                       if ((cells[4].getElementsByTagName("INPUT")[1].getAttribute("TYPE") == "hidden") && (cells[4].getElementsByTagName("INPUT")[1].value != ""  ))
                         {
                             for (j=0; j<check_articles_id.length; j++)
                             {
-                                if (check_articles_id[j] == all_articles_id[i])
+                                if (check_articles_id[j] == cells[4].getElementsByTagName("INPUT")[1].value)
                                 {
                                     alert ( "Вже є такий товар");
                                     return false;
                                 }
                             } 
-                            check_articles_id.push(all_articles_id[i]);
+                            check_articles_id.push(cells[4].getElementsByTagName("INPUT")[1].value);
                         }
-                    }
-	            }
-                return true;
+                    } 
+                }
             }
             
             function detect_article_id(row_index)
@@ -914,11 +890,11 @@ __END__
             <table id="order_elements_table" border="1">
             <tbody>
                 <tr id="0">
-                    <td>Товар</td>
-                    <td>Провайдер</td>
-                    <td>Ціна</td>
-                    <td>Кількість</td>
-                    <td>Видалити</td>
+                    <th>Товар</th>
+                    <th>Провайдер</th>
+                    <th>Ціна</th>
+                    <th>Кількість</th>
+                    <th>Видалити</th>
                 </tr>
              
             <%@order_elements.sort.each do |article_id,article_data|%>
