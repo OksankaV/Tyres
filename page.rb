@@ -539,16 +539,15 @@ __END__
     <head>
         <title>Кошик</title>
         <meta charset="utf-8">
+        <script type="text/javascript" src="http://code.jquery.com/jquery.js"></script> 
         <script>
 
             function validate_form()
             {
-                var rows = document.getElementById("shoping_cart_table").rows;
-
-	            for (i=1; i<rows.length; i++)
+                var rows = $("tr");
+                for (i=1; i<rows.length; i++)
                 {
-                    var cells = rows[i].cells;	
-                    if ((cells[4].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "checkbox") && (cells[4].getElementsByTagName("INPUT")[0].checked == true ))
+                    if ($(rows[i]).find("input:checkbox").is(':checked'))
                     {
                         delete_confirm = confirm ( "Видалити виділені замовлення?" );
                         if (delete_confirm == false)
@@ -562,12 +561,12 @@ __END__
                     }
                     else
                     {                  
-                       if ((cells[2].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "text") && (cells[2].getElementsByTagName("INPUT")[0].value == ""))
-                       {
+                        if (($(rows[i]).find("input:text").val() == "") || ($(rows[i]).find("input:text").val() == 0))
+                        {
                             alert ( "Кількість товару не може бути 0" );
                             return false;
-                       } 
-                    } 
+                        } 
+                    }
                 }
             }
 
@@ -633,12 +632,10 @@ __END__
         
             function validate_form()
             {
-                var rows = document.getElementById("orders_table").rows;
-
+                var rows = $("tr");
 	            for (i=1; i<rows.length; i++)
                 {
-                    var cells = rows[i].cells;	
-                    if ((cells[7].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "checkbox") && (cells[7].getElementsByTagName("INPUT")[0].checked == true ))
+                    if ($(rows[i]).find("input:checkbox").is(':checked'))
                     {
                         delete_confirm = confirm ( "Видалити виділені замовлення?" );
                         if (delete_confirm == false)
@@ -651,17 +648,17 @@ __END__
                         }
                     }
                     else
-                    {                  
-                       if ((cells[1].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "text") && (cells[1].getElementsByTagName("INPUT")[0].value == ""))
-                       {
+                    {   
+                        if ($(rows[i]).find('input:text[name^="customer_name"]').val() == "")             
+                        {
                             alert ("Заповніть і’мя покупця в замовленні");
                             return false;
-                       } 
-                       if ((cells[4].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "text") && (cells[4].getElementsByTagName("INPUT")[0].value == ""))
-                       {
+                        } 
+                        if ($(rows[i]).find('input:text[name^="customer_phone"]').val() == "")
+                        {
                             alert ("Заповніть телефон покупця в замовленні");
                             return false;
-                       }
+                        }
                     } 
                 }
             }
@@ -827,13 +824,11 @@ __END__
              
             function validate_form()
             {
-                var rows = document.getElementById("order_elements_table").rows;
                 var check_articles_id = new Array();
-
+                var rows = $("tr");
 	            for (i=1; i<rows.length; i++)
                 {
-                    var cells = rows[i].cells;	
-                    if ((cells[4].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "checkbox") && (cells[4].getElementsByTagName("INPUT")[0].checked == true ))
+                    if ($(rows[i]).find("input:checkbox").is(':checked'))
                     {
                         delete_confirm = confirm ( "Видалити виділені елементи замовлення?" );
                         if (delete_confirm == false)
@@ -847,27 +842,27 @@ __END__
                     }
                     else
                     {
-                       if (cells[1].getElementsByTagName("SELECT")[0].value == "")
+                       if ($(rows[i]).find('select[name^="tyre_provider"]').val() == "")
                        {
                             alert ( "Заповніть всі елементи замовлення" );
                             return false;
                        } 
-                       if ((cells[3].getElementsByTagName("INPUT")[0].getAttribute("TYPE") == "text") && ((cells[3].getElementsByTagName("INPUT")[0].value == "") || (cells[3].getElementsByTagName("INPUT")[0].value == 0)))
+                       if (($(rows[i]).find("input:text").val() == "") || ($(rows[i]).find("input:text").val() == 0))
                        {
                             alert ( "Кількість товару не може бути 0" );
                             return false;
                        } 
-                       if ((cells[4].getElementsByTagName("INPUT")[1].getAttribute("TYPE") == "hidden") && (cells[4].getElementsByTagName("INPUT")[1].value != ""  ))
+                       if ($(rows[i]).find("input:hidden").val() != "")
                         {
                             for (j=0; j<check_articles_id.length; j++)
                             {
-                                if (check_articles_id[j] == cells[4].getElementsByTagName("INPUT")[1].value)
+                                if (check_articles_id[j] == $(rows[i]).find("input:hidden").val())
                                 {
                                     alert ( "Вже є такий товар");
                                     return false;
                                 }
                             } 
-                            check_articles_id.push(cells[4].getElementsByTagName("INPUT")[1].value);
+                            check_articles_id.push($(rows[i]).find("input:hidden").val());
                         }
                     } 
                 }
