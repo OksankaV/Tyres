@@ -13,7 +13,7 @@ else
 end    
 
 Tyre_brand_name = db.execute("select title from TyreBrand").flatten
-Tyre_providers = db.execute("select id, title from TyreProvider").flatten
+Tyre_providers = db.execute("select id, title from TyreProvider")
 Tyre_family_name = db.execute("select family_title from TyreFamily").flatten
 Tyre_width_name = db.execute("select distinct width from TyreModel order by width asc").flatten
 Tyre_canonical_size = db.execute("select distinct canonical_size from TyreModel order by width asc").flatten
@@ -684,31 +684,22 @@ __END__
             <%@orders.sort.each do |order_id,order_data|%>
                 <tr>
                     <td onclick="document.location.href='orders_elements/<%=order_id%>'"><%=order_id%></td>
-                    <%order_data.each_index do |index|%>
-                    <%if index == 0%> 
-                        <td><input name="customer_name_<%=order_id%>" type="text"  type="text" value="<%=order_data[index]%>" size="10"></td> 
-                    <%elsif index == 1%> 
-                        <td><input name="customer_address_<%=order_id%>" type="text"  type="text" value="<%=order_data[index]%>" size="10"></td> 
-                    <%elsif index == 2%> 
-                        <td><input name="customer_email_<%=order_id%>" type="text"  type="text" value="<%=order_data[index]%>" size="10"></td>
-                    <%elsif index == 3%> 
-                        <td><input name="customer_phone_<%=order_id%>" type="text"  type="text" value="<%=order_data[index]%>" size="10"></td>  
-                    <%elsif index == 5%>
-                        <td>
-                            <select name="status_<%=order_id%>">
-                                <%Status_Hash.each do |status_key,status_value|%>
-                                    <%if order_data[index] == status_key%>
-                                        <option value="<%=status_key%>" selected><%=status_value%></option>
-                                    <%else%>    
-                                        <option value="<%=status_key%>"><%=status_value%></option>
-                                    <%end%>        
-                                <%end%>
-                            </select>    
-                        </td>
-                    <%else%>
-                        <td onclick="document.location.href='orders_elements/<%=order_id%>'"><%=order_data[index]%></td>
-                    <%end%>
-                <%end%>
+                    <td><input name="customer_name_<%=order_id%>" type="text"  type="text" value="<%=order_data[0]%>" size="10"></td> 
+                    <td><input name="customer_address_<%=order_id%>" type="text"  type="text" value="<%=order_data[1]%>" size="10"></td> 
+                    <td><input name="customer_email_<%=order_id%>" type="text"  type="text" value="<%=order_data[2]%>" size="10"></td>
+                    <td><input name="customer_phone_<%=order_id%>" type="text"  type="text" value="<%=order_data[3]%>" size="10"></td>  
+                    <td onclick="document.location.href='orders_elements/<%=order_id%>'"><%=order_data[4]%></td>
+                    <td>
+                        <select name="status_<%=order_id%>">
+                            <%Status_Hash.each do |status_key,status_value|%>
+                                <%if order_data[5] == status_key%>
+                                    <option value="<%=status_key%>" selected><%=status_value%></option>
+                                <%else%>    
+                                    <option value="<%=status_key%>"><%=status_value%></option>
+                                <%end%>        
+                            <%end%>
+                        </select>    
+                    </td>
                 <td><input name="delete_<%=order_id%>" type="checkbox" value="<%=order_id%>"></td>
                 </tr>
             <%end%>
@@ -790,6 +781,7 @@ __END__
                 var family = $(family_select).val();
                 var model = $(model_select).val();
 
+
                 $.get(
                     "/article_provider",
                     {tyre_brand: brand, tyre_family: family, tyre_model: model},
@@ -799,21 +791,10 @@ __END__
             
             function add_new_row(id)
             {
-                var tbody = document.getElementById("order_elements_table").getElementsByTagName("TBODY")[0];
-                
-                var tr = document.createElement("TR");
-                var tr_id = document.createAttribute("id");
-                tr_id.value = id;
-                tr.setAttributeNode(tr_id);
-                tbody.appendChild(tr);
-                
-                var button = document.getElementById("add_button");
-                var button_click = document.createAttribute("onclick");
-                var new_id = id + 1
-                button_click.value = "add_new_row(" + new_id + ")";
-                button.setAttributeNode(button_click);
-                
-                var new_order = "tr[id='" + id + "']"
+                $("tbody:first").append("<tr id='" + id + "'></tr>");
+                var new_id = id + 1;
+                $("#add_button").attr("onclick","add_new_row(" + new_id + ")");            
+                var new_order = "tr[id='" + id + "']";
                 $.get(
                     "/add_order_element",
                     {id_param: id},
@@ -858,7 +839,7 @@ __END__
                             {
                                 if (check_articles_id[j] == $(rows[i]).find("input:hidden").val())
                                 {
-                                    alert ( "Вже є такий товар");
+                                    alert ("Вже є такий товар");
                                     return false;
                                 }
                             } 
@@ -870,6 +851,8 @@ __END__
             
             function detect_article_id(row_index)
             {
+                var price = "div[name='price[" + row_index + "]']";
+                $(price).text("0.00");
                 var brand_select = "select[name='tyre_brand[" + row_index + "]']"
                 var family_select = "select[name='tyre_family[" + row_index + "]']"
                 var model_select = "select[name='tyre_model[" + row_index + "]']"
@@ -907,67 +890,64 @@ __END__
              
             <%@order_elements.sort.each do |article_id,article_data|%>
                 <tr id="<%=i = i+1%>">
-                <%article_data.each_index do |index|%>
-                    <%if index == 0%>
                     <td>
                         <select name="tyre_brand[<%=article_id%>]" onchange="change_families(<%=article_id%>)">
                             <%Tyre_brand_name.each do |tyre_brand_name|%>
-                                <%if article_data[index] == tyre_brand_name%>
+                                <%if article_data[0] == tyre_brand_name%>
                                     <option value="<%=tyre_brand_name%>" selected><%=tyre_brand_name%></option>
                                 <%else%>    
                                     <option value="<%=tyre_brand_name%>"><%=tyre_brand_name%></option> 
                                 <%end%>     
                             <%end%>
-                        </select>
-                    <%elsif index == 1%>      
+                        </select>   
                         <select name="tyre_family[<%=article_id%>]" onchange="change_models(<%=article_id%>)">
                             <%family_value = @family_value[article_id]%>
                             <%family_value.each do |tyre_family_name|%>
-                                <%if article_data[index] == tyre_family_name%>
+                                <%if article_data[1] == tyre_family_name%>
                                     <option value="<%=tyre_family_name%>" selected><%=tyre_family_name%></option>
                                 <%else%>    
                                     <option value="<%=tyre_family_name%>"><%=tyre_family_name%></option> 
                                 <%end%>   
                             <%end%>
                         </select>
-                    <%elsif index == 2%>
                         <select name="tyre_model[<%=article_id%>]" onchange="change_providers(<%=article_id%>)">
                         <%model_value = @model_value[article_id]%>
                             <%model_value.each do |tyre_canonical_size|%>
-                                <%if article_data[index] == tyre_canonical_size%>
+                                <%if article_data[2] == tyre_canonical_size%>
                                     <option value="<%=tyre_canonical_size%>" selected><%=tyre_canonical_size%></option>
                                 <%else%>    
                                     <option value="<%=tyre_canonical_size%>"><%=tyre_canonical_size%></option> 
                                 <%end%>  
                             <%end%>
-                        </select>      
+                        </select>        
                     </td>
-                    <%elsif index == 3%>
                     <td>                        
                         <select name="tyre_provider[<%=article_id%>]" onchange="detect_article_id(<%=article_id%>)">
                         <%provider_value = @provider_value[article_id]%>
                             <%provider_value.sort.each do |tyre_provider_id,tyre_provider_title|%>
-                                <%if article_data[index] == tyre_provider_id%>
+                                <%if article_data[3] == tyre_provider_id%>
                                     <option value="<%=tyre_provider_id%>" selected><%=tyre_provider_title%></option>
                                 <%else%>    
                                     <option value="<%=tyre_provider_id%>"><%=tyre_provider_title%></option> 
                                 <%end%>  
                             <%end%>
-                        </select>      
+                        </select>       
                     </td>
-                    <%elsif index == 5%>
-                        <td><input name="quantity[<%=article_id%>]" type="text" value="<%=article_data[index].to_i%>" size="3"></td>      
-                    <%else%>
-                        <td><%=article_data[index]%></td>
-                    <%end%>
-                <%end%>
+                    <td>
+                        <div name="price[<%=article_id%>]">
+                            <%=article_data[4]%>
+                        </div>
+                    </td>
+                    <td>
+                        <input name="quantity[<%=article_id%>]" type="text" value="<%=article_data[5].to_i%>" size="3">
+                    </td>
                     <td>
                         <input name="delete[<%=article_id%>]" type="checkbox" value="<%=article_id%>">
                         <div name="article_id[<%=article_id%>]">
                             <input name="article_id[<%=article_id%>]" type="hidden" value="<%=article_id%>">
                         </div>
                     </td>
-                </tr>
+                </tr>  
             <%end%>
             </tbody>
             </table>
@@ -1009,7 +989,7 @@ __END__
             <%end%>
         </select>      
     </td>
-    <td>0.00</td>
+    <td><div name="price[<%=@id%>]">0.00</div></td>
     <td><input name="quantity[<%=@id%>]" type="text" value="4" size="3"></td> 
     <td><input name="delete[<%=@id%>]" type="checkbox" value="<%=@id%>" >
         <div name="article_id[<%=@id%>]">
