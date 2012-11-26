@@ -272,8 +272,8 @@ get '/orders_elements/:id' do
     if @form == "one_order_form"
         db.execute("begin transaction")   
         db.execute("delete from OrdersElements where order_id=?", @order_id).flatten
-        p article_id_params = params[:article_id]
-        p tyre_quantity_params = params[:quantity]
+        article_id_params = params[:article_id]
+        tyre_quantity_params = params[:quantity]
         delete_article_params = params[:delete]
         article_id_params.each do |old_id, new_id|
             db.execute("update OrdersElements set quantity=? where article_id=? and order_id=?", [tyre_quantity_params[old_id].to_i, new_id.to_i, @order_id]).flatten 
@@ -294,6 +294,7 @@ get '/orders_elements/:id' do
     @family_value = {}
     @model_value = {}
     @provider_value = {}
+    @total_price = {}
     order_elements.each do |row|
         article_id = row[0]
         model_id = db.execute("select model_id from TyreArticle where id=?", article_id).to_s.to_i
@@ -308,7 +309,12 @@ get '/orders_elements/:id' do
         @provider_value[article_id] = db.execute("select TyreProvider.id, TyreProvider.title from TyreProvider,TyreArticle where TyreArticle.provider_id=TyreProvider.id and TyreArticle.model_id=?", model_id)
         provider = db.execute("select TyreProvider.id from TyreProvider,TyreArticle where TyreArticle.provider_id=TyreProvider.id and TyreArticle.id=?", article_id).flatten.first
         row.insert(3,provider)
+        @total_price[article_id] = row[4] * row[5]
         @order_elements[article_id] = row
+    end
+    @order_price = 0.0
+    @total_price.each_value do |element_price|
+        @order_price += element_price 
     end
     
     erb :orders_elements
@@ -791,6 +797,7 @@ __END__
             
             function add_new_row(id)
             {
+                $("div[name='order_price']").text("Всьго до сплати: Оновіть дані");
                 $("tbody:first").append("<tr id='" + id + "'></tr>");
                 var new_id = id + 1;
                 $("#add_button").attr("onclick","add_new_row(" + new_id + ")");            
@@ -853,6 +860,9 @@ __END__
             {
                 var price = "div[name='price[" + row_index + "]']";
                 $(price).text("0.00");
+                var total_price = "div[name='total_price[" + row_index + "]']";
+                $(total_price).text("0.00");
+                $("div[name='order_price']").text("Всьго до сплати: Оновіть дані");
                 var brand_select = "select[name='tyre_brand[" + row_index + "]']"
                 var family_select = "select[name='tyre_family[" + row_index + "]']"
                 var model_select = "select[name='tyre_model[" + row_index + "]']"
@@ -885,6 +895,7 @@ __END__
                     <th>Провайдер</th>
                     <th>Ціна</th>
                     <th>Кількість</th>
+                    <th>Загальна вартість</th>
                     <th>Видалити</th>
                 </tr>
              
@@ -934,12 +945,13 @@ __END__
                         </select>       
                     </td>
                     <td>
-                        <div name="price[<%=article_id%>]">
-                            <%=article_data[4]%>
-                        </div>
+                        <div name="price[<%=article_id%>]"><%=article_data[4]%></div>
                     </td>
                     <td>
                         <input name="quantity[<%=article_id%>]" type="text" value="<%=article_data[5].to_i%>" size="3">
+                    </td>
+                    <td>
+                        <div name="total_price[<%=article_id%>]"><%=@total_price[article_id]%></div>
                     </td>
                     <td>
                         <input name="delete[<%=article_id%>]" type="checkbox" value="<%=article_id%>">
@@ -951,6 +963,8 @@ __END__
             <%end%>
             </tbody>
             </table>
+            <br>
+                <div name="order_price">Всього до сплати: <%=@order_price%> грн.</div>
             <br>
             <input id="add_button" type="button" value="Додати новий рядок" onclick="add_new_row(<%=i=i+1%>)">
             <input type="submit" value="Оновити дані" >
@@ -991,6 +1005,9 @@ __END__
     </td>
     <td><div name="price[<%=@id%>]">0.00</div></td>
     <td><input name="quantity[<%=@id%>]" type="text" value="4" size="3"></td> 
+    <td>
+        <div name="total_price[<%=@id%>]">0.00</div>
+    </td>
     <td><input name="delete[<%=@id%>]" type="checkbox" value="<%=@id%>" >
         <div name="article_id[<%=@id%>]">
             <input name="article_id[<%=@id%>]" type="hidden" value="<%=@id%>">
