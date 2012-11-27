@@ -124,6 +124,7 @@ end
 get '/shopping_cart' do
     @form = params[:form]
     @back_href = params[:back_href]
+    @cart_elements = {}
     if @back_href == nil
         @back_href = "/"
     end 
@@ -144,43 +145,41 @@ get '/shopping_cart' do
             tyre_price_quantity = tyre_price.to_f * tyre_quantity.to_i
             session[article_id] = [tyre_brand,tyre_family,tyre_model,tyre_price,tyre_quantity,tyre_price_quantity]
         end
-    end    
+    end   
+
     if @form == "cart_form"
-        session.each do |key,article|
-            article_quantity = params[("article_" + key.to_s).to_sym].to_i
-            delete_article = params[("delete_" + key.to_s).to_sym]
-            article_price_quantity = article[3].to_f * article_quantity
-            session[key] = [article[0],article[1],article[2],article[3],article_quantity,article_price_quantity]
-            session.delete(key) if delete_article.to_i == key.to_i
+        article_quantity = params[:article]
+        delete_article = params[:delete]
+        session.each_pair do |key,article|
+            if key =~ /\d+/ and article.class == Array
+                article_price_quantity = article[3].to_f * article_quantity[key].to_i
+                session[key] = [article[0],article[1],article[2],article[3],article_quantity[key],article_price_quantity]
+                if delete_article != nil
+                    session.delete(key) if delete_article[key].to_i == key.to_i
+                end   
+            end
         end  
     end 
 
+    session.each_pair do |key,value|
+        if key =~ /\d+/ and value.class == Array
+            @cart_elements[key] = value
+        end    
+    end
+
     @all_quantity = 0
     @all_price = 0.00
-    session.each_value do |article|
-        @all_quantity += article[4].to_i
-        @all_price += article[5].to_f  
-    end   
+    if @cart_elements.empty? == false
+        @cart_elements.each_value do |article|
+            @all_quantity += article[4].to_i
+            @all_price += article[5].to_f  
+        end  
+    end
+    
     erb :shopping_cart
 end
 
 get '/order' do
-    @form = params[:form]   
-    if @form == "order_form" 
-        customer_name = params[:customer_name]
-        customer_address = params[:customer_address]
-        customer_email = params[:customer_email]
-        customer_phone = params[:customer_phone]
-        order_date = Time.now.strftime("%d/%m/%Y %H:%M:%S")
-        
-        db.execute("insert into Orders(name, address, email, phone, date, status) values(?,?,?,?,?,?)", [customer_name, customer_address, customer_email, customer_phone, order_date, 0])
-
-        order_id = db.execute("select id from Orders where phone=? and name=? and date=?", [customer_phone, customer_name, order_date]).to_s.to_i
-        
-        session.each do |article_id,propetries|
-            db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(?,?,?,?)", [order_id, article_id, propetries[3], propetries[4]])    
-        end
-    end
     erb :order
 end
 
@@ -214,7 +213,7 @@ get '/orders_table' do
 end
 
 get '/article_family' do
-    p tyre_brand = params[:tyre_brand]
+    tyre_brand = params[:tyre_brand]
     
     if tyre_brand.empty?
         @families = db.execute("select family_title from TyreFamily").flatten
@@ -275,7 +274,7 @@ get '/orders_elements/:id' do
         article_id_params = params[:article_id]
         tyre_quantity_params = params[:quantity]
         delete_article_params = params[:delete]
-        article_id_params.each do |old_id, new_id|
+        article_id_params.each_pair do |old_id, new_id|
             db.execute("update OrdersElements set quantity=? where article_id=? and order_id=?", [tyre_quantity_params[old_id].to_i, new_id.to_i, @order_id]).flatten 
             new_tyre_price = db.execute("select price from TyreArticle where id=?", new_id.to_i).flatten.first 
             if delete_article_params == nil
@@ -326,6 +325,24 @@ get '/add_order_element' do
 end
 
 get '/thanks_page' do
+    @form = params[:form] 
+    if @form == "order_form" 
+        customer_name = params[:customer_name]
+        customer_address = params[:customer_address]
+        customer_email = params[:customer_email]
+        customer_phone = params[:customer_phone]
+        order_date = Time.now.strftime("%d/%m/%Y %H:%M:%S")
+        
+        db.execute("insert into Orders(name, address, email, phone, date, status) values(?,?,?,?,?,?)", [customer_name, customer_address, customer_email, customer_phone, order_date, 0])
+
+        order_id = db.execute("select id from Orders where phone=? and name=? and date=?", [customer_phone, customer_name, order_date]).to_s.to_i
+        
+        session.each_pair do |article_id,propetries|
+            if article_id =~ /\d+/ and propetries.class == Array 
+                db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(?,?,?,?)", [order_id, article_id, propetries[3], propetries[4]])    
+            end
+        end
+    end
     erb :thanks_page
 end
 
@@ -518,7 +535,7 @@ __END__
     <p>Опис:<br><%=@description%></p>
     <img src="/Images/<%=@family_image%>">
     <ul>Моделі:<br>
-        <%@article.each do |article_id,propetries|%>
+        <%@article.each_pair do |article_id,propetries|%>
             <li>
                 <form name="buy_form" method="GET" action="/shopping_cart">
                     <input name="form" type="hidden" value="buy_form">
@@ -593,13 +610,13 @@ __END__
                     <th>Загальна ціна товару</th>
                     <th>Видалити</th>
                 </tr>
-            <%session.sort{|a,b| a[1].first<=>b[1].first}.each do |key,article|%>
+            <%@cart_elements.sort{|a,b| a[1].first<=>b[1].first}.each do |key,article|%>
                 <tr>
                     <td><%=article[0]%> - <%=article[1]%> - <%=article[2]%></td>
                     <td><%=article[3]%> грн.</td>
-                    <td><input name="article_<%=key%>" type="text" size="3" value="<%=article[4]%>"></td>
+                    <td><input name="article[<%=key%>]" type="text" size="3" value="<%=article[4]%>"></td>
                     <td><%=article[5]%> грн.</td>
-                    <td><input name="delete_<%=key%>" type="checkbox" value="<%=key%>"></td>    
+                    <td><input name="delete[<%=key%>]" type="checkbox" value="<%=key%>"></td>    
                 </tr>    
             <%end%>
             </table>
@@ -701,7 +718,7 @@ __END__
                     <td onclick="document.location.href='orders_elements/<%=order_id%>'"><%=order_data[4]%></td>
                     <td>
                         <select name="status_<%=order_id%>">
-                            <%Status_Hash.each do |status_key,status_value|%>
+                            <%Status_Hash.each_pair do |status_key,status_value|%>
                                 <%if order_data[5] == status_key%>
                                     <option value="<%=status_key%>" selected><%=status_value%></option>
                                 <%else%>    
