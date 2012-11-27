@@ -325,6 +325,10 @@ get '/add_order_element' do
     erb :add_order_element
 end
 
+get '/thanks_page' do
+    erb :thanks_page
+end
+
 
 
 __END__
@@ -615,7 +619,7 @@ __END__
         <meta charset="utf-8">
     </head>
     <body>
-        <form name="order" method="GET" action="" onsubmit="alert('Замовлення відправлено')">
+        <form name="order" method="GET" action="/thanks_page">
             <input name="form" type="hidden" value="order_form">
             <p><b>Оформити замовлення</b></p>
             <p>Імя</p><input name="customer_name" type="text" required>
@@ -1014,5 +1018,15 @@ __END__
         </div>
     </td>
 
-
+@@ thanks_page
+<html>
+    <head>
+        <title>Дякуємо</title>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <p><b>Дякуємо за замовлення!</b></p>
+        <p>Наш менеджер зв'яжеться з Вами.</p>
+    </body>
+</html>
 
