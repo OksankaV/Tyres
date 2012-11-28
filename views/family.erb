@@ -1,0 +1,27 @@
+    <%=@tyre_brand%>/<%=@tyre_family%>
+    <p>Опис:<br><%=@description%></p>
+    <img src="/Images/<%=@family_image%>">
+    <ul>Моделі:<br>
+        <%@article.each_pair do |article_id,propetries|%>
+            <li>
+                <form name="buy_form" method="GET" action="/shopping_cart">
+                    <input name="form" type="hidden" value="buy_form">
+                    <%=propetries[0]%> Ціна моделі: <%=propetries[1]%> грн. Кількість: <%=propetries[2]%>
+                    <input name="tyre_brand" type="hidden" value="<%=@tyre_brand%>"> 
+                    <input name="tyre_family" type="hidden" value="<%=@tyre_family%>">
+                    <input name="tyre_model" type="hidden" value="<%=propetries[0]%>">
+                    <input name="tyre_price" type="hidden" value="<%=propetries[1]%>">
+                    <input name="family_id" type="hidden" value="<%=@family_id%>">
+                    <input name="article_id" type="hidden" value="<%=article_id%>">
+                    <input name="back_href" type="hidden" value="/family/<%=@family_id%>?family_id=<%=@family_id%>&tyre_brand=<%=@tyre_brand%>&tyre_family=<%=@tyre_family%>">
+                    <%if propetries[2].to_i > 0%>
+                        <input type="submit" value="Купити">
+                    <%else%>
+                         <b>Немає в наявності</b>
+                    <%end%>
+
+                </form> 
+            </li>
+        <%end%> 
+    </ul>    
+

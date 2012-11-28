@@ -1,0 +1,77 @@
+        <script>
+      
+            function validate_form()
+            {
+                var rows = $("tr");
+	            for (i=1; i<rows.length; i++)
+                {
+                    if ($(rows[i]).find("input:checkbox").is(':checked'))
+                    {
+                        delete_confirm = confirm ( "Видалити виділені замовлення?" );
+                        if (delete_confirm == false)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {   
+                        if ($(rows[i]).find('input:text[name^="customer_name"]').val() == "")             
+                        {
+                            alert ("Заповніть і’мя покупця в замовленні");
+                            return false;
+                        } 
+                        if ($(rows[i]).find('input:text[name^="customer_phone"]').val() == "")
+                        {
+                            alert ("Заповніть телефон покупця в замовленні");
+                            return false;
+                        }
+                    } 
+                }
+            }
+
+        </script>   
+
+        <p><b>Список замовлень</b></p>
+        <form name="order_table_form" method="GET" action="" onsubmit="return validate_form()">
+            <input name="form" type="hidden" value="order_table_form">
+            <table id="orders_table" border="1">
+                <tr>
+                    <th>Номер</th>
+                    <th>Покупець</th>
+                    <th>Адреса</th>
+                    <th>Мило</th>
+                    <th>Телефон</th>
+                    <th>Дата</th>
+                    <th>Статус</th>
+                    <th>Видалити</th>
+                </tr>
+            <%@orders.sort.each do |order_id,order_data|%>
+                <tr>
+                    <td onclick="document.location.href='orders_elements/<%=order_id%>'"><%=order_id%></td>
+                    <td><input name="customer_name[<%=order_id%>]" type="text"  type="text" value="<%=order_data[0]%>" size="10"></td> 
+                    <td><input name="customer_address[<%=order_id%>]" type="text"  type="text" value="<%=order_data[1]%>" size="10"></td> 
+                    <td><input name="customer_email[<%=order_id%>]" type="text"  type="text" value="<%=order_data[2]%>" size="10"></td>
+                    <td><input name="customer_phone[<%=order_id%>]" type="text"  type="text" value="<%=order_data[3]%>" size="10"></td>  
+                    <td onclick="document.location.href='orders_elements/<%=order_id%>'"><%=order_data[4]%></td>
+                    <td>
+                        <select name="status[<%=order_id%>]">
+                            <%Status_Hash.each_pair do |status_key,status_value|%>
+                                <%if order_data[5] == status_key%>
+                                    <option value="<%=status_key%>" selected><%=status_value%></option>
+                                <%else%>    
+                                    <option value="<%=status_key%>"><%=status_value%></option>
+                                <%end%>        
+                            <%end%>
+                        </select>    
+                    </td>
+                <td><input name="delete[<%=order_id%>]" type="checkbox" value="<%=order_id%>"></td>
+                </tr>
+            <%end%>
+            </table>
+            <br>
+            <input type="submit" value="Оновити дані">
+        </form>

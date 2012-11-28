@@ -1,0 +1,58 @@
+        <script>
+
+            function validate_form()
+            {
+                var rows = $("tr");
+                for (i=1; i<rows.length; i++)
+                {
+                    if ($(rows[i]).find("input:checkbox").is(':checked'))
+                    {
+                        delete_confirm = confirm ( "Видалити виділені замовлення?" );
+                        if (delete_confirm == false)
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    }
+                    else
+                    {                  
+                        if (($(rows[i]).find("input:text").val() == "") || ($(rows[i]).find("input:text").val() == 0))
+                        {
+                            alert ( "Кількість товару не може бути 0" );
+                            return false;
+                        } 
+                    }
+                }
+            }
+
+        </script>  
+
+        <form name="cart_form" method="GET" action="" onsubmit="return validate_form()">
+            <input name="form" type="hidden" value="cart_form">
+            <table id="shoping_cart_table" border="1">
+                <tr>
+                    <th>Товар</th>
+                    <th>Ціна за одиницю</th>
+                    <th>Кількість</th>
+                    <th>Загальна ціна товару</th>
+                    <th>Видалити</th>
+                </tr>
+            <%@cart_elements.sort{|a,b| a[1].first<=>b[1].first}.each do |key,article|%>
+                <tr>
+                    <td><%=article[0]%> - <%=article[1]%> - <%=article[2]%></td>
+                    <td><%=article[3]%> грн.</td>
+                    <td><input name="article[<%=key%>]" type="text" size="3" value="<%=article[4]%>"></td>
+                    <td><%=article[5]%> грн.</td>
+                    <td><input name="delete[<%=key%>]" type="checkbox" value="<%=key%>"></td>    
+                </tr>    
+            <%end%>
+            </table>
+            Всього товарів: <%=@all_quantity%> на суму <%=@all_price%> грн.
+            <input name="back_href" type="hidden" value="<%=@back_href%>">
+            <input type="submit" value="Перерахувати">
+        </form>
+        <a href="<%=@back_href%>">Повернутися до покупок</a>
+        <a href='/order'>Оформити замовлення</a>   
