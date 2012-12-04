@@ -1,16 +1,25 @@
-        <form method="GET" action="tyres"> 
-      
-            <ul>Виробники  
-            <%Tyre_brand_name.each do |tyre_brand_name|%>
-                <%if @tyre_brand.include?(tyre_brand_name.to_s) or @tyre_brand.empty?%>
-                    <li><input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" checked><%=tyre_brand_name%></li>
-                <%else%> 
-                    <li><input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" ><%=tyre_brand_name%></li>   
-                <%end%>  
-            <%end%>
-            </ul> 
-                 
-            <select name="tyre_width">
+    <div class="row">
+        <form method="GET" action="tyres" > 
+            <div class="span3"> 
+              <div class="well form-horizontal">
+              <h4>Виробники</h4>
+              <%Tyre_brand_name.each do |tyre_brand_name|%>
+                  <%if @tyre_brand.include?(tyre_brand_name.to_s) or @tyre_brand.empty?%>
+                      <label class="checkbox">
+                        <input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" checked><%=tyre_brand_name%>
+                      </label>  
+                  <%else%> 
+                      <label class="checkbox">
+                        <input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" ><%=tyre_brand_name%>  
+                      </label>
+                  <%end%>  
+              <%end%>
+              </div>
+            </div>
+            
+            <div class="span9">
+            <div class="well form-inline">      
+            <select class="input-small" name="tyre_width">
                 <option value="">Ширина</option>
                 <%Tyre_width_name.each do |tyre_width_name|%>
                     <%if @tyre_width == tyre_width_name.to_s%>
@@ -21,7 +30,7 @@
                 <%end%>     
             </select>
             <b>/</b>
-            <select name="tyre_height">
+            <select class="input-small" name="tyre_height">
                 <option value="">Висота</option>
                 <%Tyre_height_name.each do |tyre_height_name|%>
                     <%if @tyre_height == tyre_height_name.to_s%>
@@ -32,7 +41,7 @@
                 <%end%>    
             </select>
             <b>R</b>
-            <select name="tyre_diameter">
+            <select class="input-small" name="tyre_diameter">
                 <option value="">Діаметр</option>
                 <%Tyre_diameter_name.each do |tyre_diameter_name|%>
                     <%if @tyre_diameter == tyre_diameter_name.to_s%>
@@ -43,7 +52,7 @@
                 <%end%>    
             </select> 
 
-            <select name="tyre_season">
+            <select class="input-medium" name="tyre_season">
                 <option value="">Сезон</option>
                 <%Tyre_season.each do |key_tyre_season,value_tyre_season|%>
                     <%if @tyre_season == key_tyre_season.to_s%>
@@ -53,14 +62,17 @@
                     <%end%> 
                <%end%>
             </select>
-            <input type="submit" value="Пошук"> 
-            
+            <input class="btn" type="submit" value="Пошук"> 
+            </div>
+            <div class="well"> 
             <%if @select_family.empty?%>
                 <p>Нічого не знайдено</p>
             <%else%>      
                 <%@select_family.sort{|a,b| a[1]<=>b[1]}.each do |family_id,brand_family|%>
                     <li><a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=brand_family[1]%>&tyre_family=<%=brand_family[0]%>"><%=brand_family[1]%> - <%=brand_family[0]%></a></li>   
                 <%end%> 
-            <%end%> 
-              
-        </form>        
+            <%end%>
+            </div>  
+            </div>  
+        </form>  
+    </div>      
