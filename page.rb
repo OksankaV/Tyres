@@ -23,6 +23,7 @@ Tyre_season = { "W" => "Зимові", "S" => "Літні", "A" => "Всесез
 Select_Array = ['Ширина', 'Висота', 'Діаметр', 'Виробник', 'Модель', 'Сезон']
 Tyre_quantity = 4
 Status_Hash = { 0 => "Не виконано", 1 => "Підтверджено", 2 => "Відправлено", 3 => "Завершено"}
+Popular_tyre_brands = ["Bridgestone","Dunlop","Nokian"]
 
 get '/' do
     @title = "Головна"
@@ -100,6 +101,15 @@ get '/tyres' do
 	else
 		@select_family = {}
 	end	
+	@show_hide_brands_class = {}
+	Tyre_brand_name.each do |tyre_brand|
+		p tyre_brand
+		if Popular_tyre_brands.include?(tyre_brand)
+			@show_hide_brands_class[tyre_brand] = "popular_brand"
+		else
+			@show_hide_brands_class[tyre_brand] = "hidden_brand"
+		end
+	end
     erb :tyres
 end
 

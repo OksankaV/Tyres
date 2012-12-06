@@ -30,6 +30,9 @@ logotype TEXT(100)
 INSERT INTO "TyreBrand" VALUES('Dunlop','В настоящее время компания Dunlop занимает 5-е место в мире по объему производства шин. Dunlop заключила контракты на поставку шин с 33-мя автогигантами.','http://dunlopua.com','dunlop.png');
 INSERT INTO "TyreBrand" VALUES('Bridgestone','Компанія Bridgestone Corporation була заснована 1 березня 1931 року. ЇЇ засновником став Шоджіро Ішібаші (1889-1976).','http://bridgestoneua.com','bridgestone.jpg');
 INSERT INTO "TyreBrand" VALUES('Nokian','Nokian Tyres — фінський концерн, що розробляє та виготовляє шини для легкових автомобілів, вантажного транспорту та індустріальної техніки.','http://www.nokiantyres.ua','nokian.gif');
+INSERT INTO "TyreBrand" VALUES('Dunlop2','В настоящее время компания Dunlop занимает 5-е место в мире по объему производства шин. Dunlop заключила контракты на поставку шин с 33-мя автогигантами.','http://dunlopua.com','dunlop.png');
+INSERT INTO "TyreBrand" VALUES('Bridgestone2','Компанія Bridgestone Corporation була заснована 1 березня 1931 року. ЇЇ засновником став Шоджіро Ішібаші (1889-1976).','http://bridgestoneua.com','bridgestone.jpg');
+INSERT INTO "TyreBrand" VALUES('Nokian2','Nokian Tyres — фінський концерн, що розробляє та виготовляє шини для легкових автомобілів, вантажного транспорту та індустріальної техніки.','http://www.nokiantyres.ua','nokian.gif');
 CREATE TABLE TyreProvider (
 id INTEGER NOT NULL  PRIMARY KEY AUTOINCREMENT,
 title TEXT(50) NOT NULL

@@ -31,6 +31,34 @@
 		send_form();
 	}
 	
+	$(document).ready(
+		function()
+		{
+			$('.hidden_brand').hide();
+			$("#show_all_brands").text(" Показати всі ");
+			$("#show_all_brands").prepend("<i class='icon-chevron-down'></i>");	
+			$("#show_all_brands").append("<i class='icon-chevron-down'></i>");
+			$("#show_all_brands").click(
+				function()
+				{
+					$('.hidden_brand').toggle();				 
+					if($('.hidden_brand').is(':hidden'))
+					{
+						$("#show_all_brands").text(" Показати всі ");
+						$("#show_all_brands").prepend("<i class='icon-chevron-down'></i>");			 
+						$("#show_all_brands").append("<i class='icon-chevron-down'></i>");
+					}
+					else
+					{
+						$("#show_all_brands").text(" Показати популярні ");
+						$("#show_all_brands").prepend("<i class='icon-chevron-up'></i>");
+						$("#show_all_brands").append("<i class='icon-chevron-up'></i>");
+					}	
+				}
+			)
+		}
+	)
+
 </script>
 <div class="row">
 	<form id="filter_form" method="GET" action="tyres" > 
@@ -106,7 +134,8 @@
 				</div>					
 			<%end%>		
 			<div class="well form-horizontal">
-				<h4>Ширина</h4>      
+				<h4>Ширина</h4> 
+				<i class="icon-resize-horizontal"></i>    
 				<select class="input-medium" name="tyre_width" onchange="send_form()">
 					<option value="">Оберіть</option>
 					<%Tyre_width_name.each do |tyre_width_name|%>
@@ -118,6 +147,7 @@
 					<%end%>     
 				</select>
 				<h4>Висота</h4> 
+				<i class="icon-resize-vertical"></i> 
 				<select class="input-medium" name="tyre_height" onchange="send_form()">
 					<option value="">Оберіть</option>
 					<%Tyre_height_name.each do |tyre_height_name|%>
@@ -129,6 +159,7 @@
 					<%end%>    
 				</select>
 				<h4>Діаметр</h4> 
+				<i class="icon-resize-full"></i> 
 				<select class="input-medium" name="tyre_diameter" onchange="send_form()">
 					<option value="">Оберіть</option>
 					<%Tyre_diameter_name.each do |tyre_diameter_name|%>
@@ -140,6 +171,7 @@
 					<%end%>    
 				</select> 
 				<h4>Сезон</h4>
+				<i class="icon-asterisk"></i> 
 				<select class="input-medium" name="tyre_season" onchange="send_form()">
 					<option value="">Оберіть</option>
 					<%Tyre_season.each do |key_tyre_season,value_tyre_season|%>
@@ -153,20 +185,21 @@
 			</div>
 			<div class="well form-horizontal">
 				<h4>Виробники</h4>
-				<input class="btn" type="button" value="Позначити всі" onclick="set_all_checked()">
-				<input class="btn" type="button" value="Скинути всі" onclick="remove_all_checked()">
+				<button class="btn" onclick="set_all_checked()"><i class='icon-check'></i> Позначити всі</button>
+				<button class="btn" onclick="remove_all_checked()"><i class='icon-share'></i> Скинути всі</button>
 				<br><br>
-				<%Tyre_brand_name.each do |tyre_brand_name|%>
+				<%Tyre_brand_name.sort.each do |tyre_brand_name|%>
 					<%if @tyre_brand.include?(tyre_brand_name.to_s) or @index_form == true%>
-						<label class="checkbox">
+						<label class="checkbox <%=@show_hide_brands_class[tyre_brand_name]%>">
 							<input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" onchange="send_form()" checked><%=tyre_brand_name%>
 						</label>  
 					<%else%> 
-						<label class="checkbox">
-							<input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" onchange="send_form()"><%=tyre_brand_name%>  
+						<label class="checkbox <%=@show_hide_brands_class[tyre_brand_name]%>">
+							<input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" onchange="send_form()"><%=tyre_brand_name%>
 						</label>
 					<%end%>  
 				<%end%>
+				<a id="show_all_brands"class="show_all"></a>
 			</div>
 		</div>
             
