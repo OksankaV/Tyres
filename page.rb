@@ -19,7 +19,7 @@ Tyre_width_name = db.execute("select distinct width from TyreModel order by widt
 Tyre_canonical_size = db.execute("select distinct canonical_size from TyreModel order by width asc").flatten
 Tyre_height_name = db.execute("select distinct height from TyreModel order by height asc").flatten
 Tyre_diameter_name = db.execute("select distinct rim_diameter from TyreModel order by rim_diameter asc").flatten
-Tyre_season = { "W" => "Зимові шини", "S" => "Літні шини", "A" => "Всесезоннні шини"}
+Tyre_season = { "W" => "Зимові", "S" => "Літні", "A" => "Всесезонні"}
 Select_Array = ['Ширина', 'Висота', 'Діаметр', 'Виробник', 'Модель', 'Сезон']
 Tyre_quantity = 4
 Status_Hash = { 0 => "Не виконано", 1 => "Підтверджено", 2 => "Відправлено", 3 => "Завершено"}
@@ -41,49 +41,65 @@ end
 
 get '/tyres' do
     @title = "Шини"
-    if params[:tyre_brand] != nil
-        @tyre_brand = params[:tyre_brand].to_a
-    elsif params[:item] != nil     
-        @tyre_brand = params[:item]
+    @index_form = false
+    if params[:tyre_brand] != nil 
+    	if params[:tyre_brand] != ""
+        	@tyre_brand = params[:tyre_brand].to_a
+        else	
+    		@tyre_brand = Tyre_brand_name
+    		@index_form = true
+    	end
+    elsif params[:item] != nil
+    	if params[:item] != ""     
+        	@tyre_brand = params[:item]
+        else 
+    		@tyre_brand = ""     
+    	end
     else 
-        @tyre_brand = Tyre_brand_name    
+    	@tyre_brand = ""		
     end
     @tyre_width = params[:tyre_width]
     @tyre_height = params[:tyre_height]
     @tyre_diameter = params[:tyre_diameter]
     @tyre_family = params[:tyre_family]
     @tyre_season = params[:tyre_season]
-    select_family = "select TyreFamily.id from TyreModel,TyreFamily where TyreModel.family_id = TyreFamily.id"
+    
+    if @tyre_brand.empty? == false
+    
+		select_family = "select TyreFamily.id from TyreModel,TyreFamily where TyreModel.family_id = TyreFamily.id"
 
-    @bind_hash = {}
-    if @tyre_brand != nil and @tyre_brand.empty? == false
-        i=0
-        select_family =  select_family + " and ( "
-        @tyre_brand.each do |tyre_brands_check|
-            if i == 0
-                select_family = filter_select(select_family, tyre_brands_check, Select_Array[3], "TyreFamily.brand_title = :brand" + i.to_s, "brand" + i.to_s)
-            else
-                select_family = filter_select(select_family, tyre_brands_check, Select_Array[3], " or TyreFamily.brand_title = :brand" + i.to_s, "brand" + i.to_s)
-            end
-            i += 1
-        end
-        select_family =  select_family + " ) "
-    end
-    
-    select_family = filter_select(select_family, @tyre_family, Select_Array[4], " and TyreFamily.family_title = :family", "family") if @tyre_family != nil and @tyre_family != ""
-    select_family = filter_select(select_family, @tyre_width, Select_Array[0], " and TyreModel.width = :width", "width") if @tyre_width != nil and @tyre_width != ""
-    select_family = filter_select(select_family, @tyre_height, Select_Array[1], " and TyreModel.height = :height", "height") if @tyre_height != nil and @tyre_height != ""
-    select_family = filter_select(select_family, @tyre_diameter, Select_Array[2], " and TyreModel.rim_diameter = :diameter", "diameter") if @tyre_diameter != nil and @tyre_diameter != ""
-    select_family = filter_select(select_family, @tyre_season, Select_Array[5], " and TyreFamily.season = :season", "season") if @tyre_season != nil and @tyre_season != ""
-    
-    select_family_id = db.execute(select_family, @bind_hash).flatten.uniq
-    
-    @select_family = {}
-    select_family_id.each do |family_id|
-        select_family_title = db.execute("select family_title from TyreFamily where id=?",family_id)
-        select_brand_title = db.execute("select brand_title from TyreFamily where id=?",family_id)
-        @select_family[family_id] = ([select_family_title.to_s,select_brand_title.to_s])
-    end  
+		@bind_hash = {}
+		if @tyre_brand != nil and @tyre_brand.empty? == false
+		    i=0
+		    select_family =  select_family + " and ( "
+		    @tyre_brand.each do |tyre_brands_check|
+		        if i == 0
+		            select_family = filter_select(select_family, tyre_brands_check, Select_Array[3], "TyreFamily.brand_title = :brand" + i.to_s, "brand" + i.to_s)
+		        else
+		            select_family = filter_select(select_family, tyre_brands_check, Select_Array[3], " or TyreFamily.brand_title = :brand" + i.to_s, "brand" + i.to_s)
+		        end
+		        i += 1
+		    end
+		    select_family =  select_family + " ) "
+		end
+		
+		select_family = filter_select(select_family, @tyre_family, Select_Array[4], " and TyreFamily.family_title = :family", "family") if @tyre_family != nil and @tyre_family != ""
+		select_family = filter_select(select_family, @tyre_width, Select_Array[0], " and TyreModel.width = :width", "width") if @tyre_width != nil and @tyre_width != ""
+		select_family = filter_select(select_family, @tyre_height, Select_Array[1], " and TyreModel.height = :height", "height") if @tyre_height != nil and @tyre_height != ""
+		select_family = filter_select(select_family, @tyre_diameter, Select_Array[2], " and TyreModel.rim_diameter = :diameter", "diameter") if @tyre_diameter != nil and @tyre_diameter != ""
+		select_family = filter_select(select_family, @tyre_season, Select_Array[5], " and TyreFamily.season = :season", "season") if @tyre_season != nil and @tyre_season != ""
+		
+		select_family_id = db.execute(select_family, @bind_hash).flatten.uniq
+		
+		@select_family = {}
+		select_family_id.each do |family_id|
+		    select_family_title = db.execute("select family_title from TyreFamily where id=?",family_id)
+		    select_brand_title = db.execute("select brand_title from TyreFamily where id=?",family_id)
+		    @select_family[family_id] = ([select_family_title.to_s,select_brand_title.to_s])
+		end  
+	else
+		@select_family = {}
+	end	
     erb :tyres
 end
 

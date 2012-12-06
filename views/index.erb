@@ -1,60 +1,57 @@
-        <script>
-            function change_families()
-            {
-                var brand = $('select[name="tyre_brand"]').val();
-                $.get(
-                    "/models",
-                    {tyre_brand: brand},
-                    function(data) {$('select[name="tyre_family"]').html(data)}
-                );
-            }  
-
-        </script>    
-        <h2 align="center">Швидкий пошук шин</h2>
-        <form class="well" name="search_tyre_form" method="GET" action="tyres">
-            <select class="input-small" name="tyre_width">
-                <option value="">Ширина</option>
-                <%Tyre_width_name.each do |tyre_width_name|%>  
-                    <option value="<%=tyre_width_name%>"><%=tyre_width_name%></option>  
-                <%end%>   
-            </select>
-            <strong>/</strong>
-            <select class="input-small" name="tyre_height">
-                <option value="">Висота</option>
-                <%Tyre_height_name.each do |tyre_height_name|%>
-                    <option value="<%=tyre_height_name%>"><%=tyre_height_name%></option>  
-                <%end%>   
-            </select>
-            <strong>R</strong>
-            <select class="input-small" name="tyre_diameter">
-                <option value="">Діаметр</option>
-                <%Tyre_diameter_name.each do |tyre_diameter_name|%> 
-                    <option value="<%=tyre_diameter_name%>"><%=tyre_diameter_name%></option>  
-                <%end%>   
-            </select> 
-            <br>
-
-            <select class="input-medium" name="tyre_brand" onChange="change_families()">
-                <option value="">Виробник</option>
-                <%Tyre_brand_name.each do |tyre_brand_name|%>    
-                    <option value="<%=tyre_brand_name%>"><%=tyre_brand_name%></option>  
-                <%end%>
-            </select>
-             
-            <select class="input-medium" name="tyre_family">
-                <option value="" selected>Модель</option>
-                <%Tyre_family_name.each do |tyre_family_name|%>
-                    <option value="<%=tyre_family_name%>"><%=tyre_family_name%></option> 
-                <%end%>
-            </select> 
-            <br>
-            <select class="input-medium" name="tyre_season">
-                <option value="">Сезон</option>
-                <%Tyre_season.each do |key_tyre_season,value_tyre_season|%>  
-                    <option value="<%=key_tyre_season%>"><%=value_tyre_season%></option>  
-                <%end%>
-            </select>
-            <br>
-            
-            <input class="btn"  type="submit" value="Пошук"> 
-        </form>        
+<script>
+	function change_families()
+	{
+		var brand = $('select[name="tyre_brand"]').val();
+		$.get(
+			"/models",
+			{tyre_brand: brand},
+			function(data) {$('select[name="tyre_family"]').html(data)}
+		);
+	}  
+</script>
+    
+<h2 align="center">Швидкий пошук шин</h2>
+<form class="well" name="search_tyre_form" method="GET" action="tyres">
+	<select class="input-small" name="tyre_width">
+		<option value="">Ширина</option>
+		<%Tyre_width_name.each do |tyre_width_name|%>  
+			<option value="<%=tyre_width_name%>"><%=tyre_width_name%></option>  
+		<%end%>   
+	</select>
+	<strong>/</strong>
+	<select class="input-small" name="tyre_height">
+		<option value="">Висота</option>
+		<%Tyre_height_name.each do |tyre_height_name|%>
+			<option value="<%=tyre_height_name%>"><%=tyre_height_name%></option>  
+		<%end%>   
+	</select>
+	<strong>R</strong>
+	<select class="input-small" name="tyre_diameter">
+		<option value="">Діаметр</option>
+		<%Tyre_diameter_name.each do |tyre_diameter_name|%> 
+			<option value="<%=tyre_diameter_name%>"><%=tyre_diameter_name%></option>  
+		<%end%>   
+	</select> 
+	<br>
+	<select class="input-medium" name="tyre_brand" onChange="change_families()">
+		<option value="">Виробник</option>
+		<%Tyre_brand_name.each do |tyre_brand_name|%>    
+			<option value="<%=tyre_brand_name%>"><%=tyre_brand_name%></option>  
+		<%end%>
+	</select>
+	<select class="input-medium" name="tyre_family">
+		<option value="" selected>Модель</option>
+		<%Tyre_family_name.each do |tyre_family_name|%>
+			<option value="<%=tyre_family_name%>"><%=tyre_family_name%></option> 
+		<%end%>
+	</select> 
+	<br>
+	<select class="input-medium" name="tyre_season">
+		<option value="">Сезон</option>
+		<%Tyre_season.each do |key_tyre_season,value_tyre_season|%>  
+			<option value="<%=key_tyre_season%>"><%=value_tyre_season%></option>  
+		<%end%>
+	</select>
+	<br>
+	<input class="btn"  type="submit" value="Пошук"> 
+</form>        

@@ -1,78 +1,186 @@
-    <div class="row">
-        <form method="GET" action="tyres" > 
-            <div class="span3"> 
-              <div class="well form-horizontal">
-              <h4>Виробники</h4>
-              <%Tyre_brand_name.each do |tyre_brand_name|%>
-                  <%if @tyre_brand.include?(tyre_brand_name.to_s) or @tyre_brand.empty?%>
-                      <label class="checkbox">
-                        <input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" checked><%=tyre_brand_name%>
-                      </label>  
-                  <%else%> 
-                      <label class="checkbox">
-                        <input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" ><%=tyre_brand_name%>  
-                      </label>
-                  <%end%>  
-              <%end%>
-              </div>
-            </div>
+<script>
+	function send_form()
+	{
+		$("#filter_form").submit();
+	}	
+	function remove(select_name)
+	{	
+		var value = $("#filter_form").find('select[name^="' + select_name + '"]');
+		value.attr("value","");
+		send_form();
+	}
+	function remove_checked(checkbox_name)
+	{	
+		if (checkbox_name == $("#filter_form").find('input[value^="' + checkbox_name + '"]').val())
+		{
+			var value = $("#filter_form").find('input[value^="' + checkbox_name + '"]');
+			value.removeAttr("checked");
+			send_form();
+		}	
+	}
+	
+	function remove_all_checked()
+	{	
+		$("input:checkbox").removeAttr("checked");
+		send_form();
+	}
+	
+	function set_all_checked()
+	{	
+		$("input:checkbox").attr("checked","checked");
+		send_form();
+	}
+	
+</script>
+<div class="row">
+	<form id="filter_form" method="GET" action="tyres" > 
+		<div class="span4">
+			<%if ((@tyre_width.empty? == false and @tyre_width != nil) or (@tyre_height.empty? == false and @tyre_height != nil) or (@tyre_diameter.empty? == false and @tyre_diameter != nil) or (@tyre_season.empty? == false and @tyre_season != nil) or (@tyre_brand.empty? == false and @index_form == false))%>
+				<div class="well">
+					<h4>Обрані параметри:</h4>
+					<%if @tyre_width.empty? == false and @tyre_width != nil%>
+							<span class="pull-left">
+								Ширина: <%=@tyre_width%>
+							</span>	
+							<span class="pull-right">
+								<a onclick="remove('tyre_width')"><i class="icon-remove"></i></a>
+							</span>
+							<br>	
+					<%end%>
+					<%if @tyre_height.empty? == false and @tyre_height != nil%>
+						<span class="pull-left">
+							Висота: <%=@tyre_height%>
+						</span>	
+						<span class="pull-right">
+							<a onclick="remove('tyre_height')"><i class="icon-remove"></i></a>
+						</span>
+						<br>		
+					<%end%>
+					<%if @tyre_diameter.empty? == false and @tyre_diameter != nil%>
+						<span class="pull-left">
+							Діаметр: <%=@tyre_diameter%>
+						</span>
+						<span class="pull-right">
+							<a onclick="remove('tyre_diameter')"><i class="icon-remove"></i></a>
+						</span>
+						<br>
+					<%end%>
+					<%if @tyre_season.empty? == false and @tyre_season != nil%>
+						<span class="pull-left">
+							Сезон: <%=Tyre_season[@tyre_season]%>
+						</span>
+						<span class="pull-right">
+							<a onclick="remove('tyre_season')"><i class="icon-remove"></i></a>
+						</span>
+						<br>	
+					<%end%>
+					<%if @tyre_brand.empty? == false and  @tyre_brand.sort != Tyre_brand_name.sort%>
+						<%@tyre_brand.each do |brand|%>
+							<span class="pull-left">
+								Бренд: <%=brand%>
+							</span>
+							<span class="pull-right">
+								<a onclick="remove_checked('<%=brand%>')"><i class="icon-remove"></i></a>
+							</span>
+							<br>
+						<%end%>
+					<%elsif @tyre_brand.sort == Tyre_brand_name.sort and @index_form == false%>
+						<span class="pull-left">
+							Бренд: Всі
+						</span>
+						<span class="pull-right">
+							<a onclick="remove_all_checked()"><i class="icon-remove"></i></a>
+						</span>
+						<br>
+					<%end%>	
+				</div>						
+			<%elsif @tyre_brand.sort == Tyre_brand_name.sort and @index_form == true%>
+				<div class="well">
+					<span class="pull-left">
+						Бренд: Всі
+					</span>
+					<span class="pull-right">
+						<a onclick="remove_all_checked()"><i class="icon-remove"></i></a>
+					</span>
+					<br>
+				</div>					
+			<%end%>		
+			<div class="well form-horizontal">
+				<h4>Ширина</h4>      
+				<select class="input-medium" name="tyre_width" onchange="send_form()">
+					<option value="">Оберіть</option>
+					<%Tyre_width_name.each do |tyre_width_name|%>
+						<%if @tyre_width == tyre_width_name.to_s%>
+							<option value="<%=tyre_width_name%>" selected><%=tyre_width_name%></option>   
+						<%else%>    
+							<option value="<%=tyre_width_name%>"><%=tyre_width_name%></option>  
+						<%end%>
+					<%end%>     
+				</select>
+				<h4>Висота</h4> 
+				<select class="input-medium" name="tyre_height" onchange="send_form()">
+					<option value="">Оберіть</option>
+					<%Tyre_height_name.each do |tyre_height_name|%>
+						<%if @tyre_height == tyre_height_name.to_s%>
+							<option value="<%=tyre_height_name%>" selected><%=tyre_height_name%></option>   
+						<%else%>    
+							<option value="<%=tyre_height_name%>"><%=tyre_height_name%></option>  
+						<%end%> 
+					<%end%>    
+				</select>
+				<h4>Діаметр</h4> 
+				<select class="input-medium" name="tyre_diameter" onchange="send_form()">
+					<option value="">Оберіть</option>
+					<%Tyre_diameter_name.each do |tyre_diameter_name|%>
+						<%if @tyre_diameter == tyre_diameter_name.to_s%>
+							<option value="<%=tyre_diameter_name%>" selected><%=tyre_diameter_name%></option>   
+						<%else%>    
+		                    <option value="<%=tyre_diameter_name%>"><%=tyre_diameter_name%></option>  
+						<%end%> 
+					<%end%>    
+				</select> 
+				<h4>Сезон</h4>
+				<select class="input-medium" name="tyre_season" onchange="send_form()">
+					<option value="">Оберіть</option>
+					<%Tyre_season.each do |key_tyre_season,value_tyre_season|%>
+						<%if @tyre_season == key_tyre_season.to_s%>
+							<option value="<%=key_tyre_season%>" selected><%=value_tyre_season%></option>   
+						<%else%>    
+							<option value="<%=key_tyre_season%>"><%=value_tyre_season%></option>  
+						<%end%> 
+					<%end%>
+				</select>
+			</div>
+			<div class="well form-horizontal">
+				<h4>Виробники</h4>
+				<input class="btn" type="button" value="Позначити всі" onclick="set_all_checked()">
+				<input class="btn" type="button" value="Скинути всі" onclick="remove_all_checked()">
+				<br><br>
+				<%Tyre_brand_name.each do |tyre_brand_name|%>
+					<%if @tyre_brand.include?(tyre_brand_name.to_s) or @index_form == true%>
+						<label class="checkbox">
+							<input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" onchange="send_form()" checked><%=tyre_brand_name%>
+						</label>  
+					<%else%> 
+						<label class="checkbox">
+							<input type="checkbox" name="item[]" value="<%=tyre_brand_name%>" onchange="send_form()"><%=tyre_brand_name%>  
+						</label>
+					<%end%>  
+				<%end%>
+			</div>
+		</div>
             
-            <div class="span9">
-            <div class="well form-inline">      
-            <select class="input-small" name="tyre_width">
-                <option value="">Ширина</option>
-                <%Tyre_width_name.each do |tyre_width_name|%>
-                    <%if @tyre_width == tyre_width_name.to_s%>
-                        <option value="<%=tyre_width_name%>" selected><%=tyre_width_name%></option>   
-                     <%else%>    
-                        <option value="<%=tyre_width_name%>"><%=tyre_width_name%></option>  
-                    <%end%>
-                <%end%>     
-            </select>
-            <b>/</b>
-            <select class="input-small" name="tyre_height">
-                <option value="">Висота</option>
-                <%Tyre_height_name.each do |tyre_height_name|%>
-                    <%if @tyre_height == tyre_height_name.to_s%>
-                        <option value="<%=tyre_height_name%>" selected><%=tyre_height_name%></option>   
-                    <%else%>    
-                        <option value="<%=tyre_height_name%>"><%=tyre_height_name%></option>  
-                    <%end%> 
-                <%end%>    
-            </select>
-            <b>R</b>
-            <select class="input-small" name="tyre_diameter">
-                <option value="">Діаметр</option>
-                <%Tyre_diameter_name.each do |tyre_diameter_name|%>
-                    <%if @tyre_diameter == tyre_diameter_name.to_s%>
-                        <option value="<%=tyre_diameter_name%>" selected><%=tyre_diameter_name%></option>   
-                    <%else%>    
-                        <option value="<%=tyre_diameter_name%>"><%=tyre_diameter_name%></option>  
-                    <%end%> 
-                <%end%>    
-            </select> 
-
-            <select class="input-medium" name="tyre_season">
-                <option value="">Сезон</option>
-                <%Tyre_season.each do |key_tyre_season,value_tyre_season|%>
-                    <%if @tyre_season == key_tyre_season.to_s%>
-                        <option value="<%=key_tyre_season%>" selected><%=value_tyre_season%></option>   
-                    <%else%>    
-                        <option value="<%=key_tyre_season%>"><%=value_tyre_season%></option>  
-                    <%end%> 
-               <%end%>
-            </select>
-            <input class="btn" type="submit" value="Пошук"> 
-            </div>
-            <div class="well"> 
-            <%if @select_family.empty?%>
-                <p>Нічого не знайдено</p>
-            <%else%>      
-                <%@select_family.sort{|a,b| a[1]<=>b[1]}.each do |family_id,brand_family|%>
-                    <li><a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=brand_family[1]%>&tyre_family=<%=brand_family[0]%>"><%=brand_family[1]%> - <%=brand_family[0]%></a></li>   
-                <%end%> 
-            <%end%>
-            </div>  
-            </div>  
-        </form>  
-    </div>      
+		<div class="span8">
+			<div class="well">
+			<h4>Результати пошуку</h4>  
+			<%if @select_family.empty?%>
+				<p>Нічого не знайдено</p>
+			<%else%>      
+				<%@select_family.sort{|a,b| a[1]<=>b[1]}.each do |family_id,brand_family|%>
+					<li><a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=brand_family[1]%>&tyre_family=<%=brand_family[0]%>"><%=brand_family[1]%> - <%=brand_family[0]%></a></li>   
+				<%end%> 
+			<%end%>
+			</div>  
+		</div>  
+	</form>  
+</div>      
