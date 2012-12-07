@@ -103,7 +103,6 @@ get '/tyres' do
 	end	
 	@show_hide_brands_class = {}
 	Tyre_brand_name.each do |tyre_brand|
-		p tyre_brand
 		if Popular_tyre_brands.include?(tyre_brand)
 			@show_hide_brands_class[tyre_brand] = "popular_brand"
 		else
@@ -216,13 +215,12 @@ get '/orders_table' do
     @title = "Таблиця замовлень"
     form = params[:form]   
     if form == "order_table_form"
-        p customer_name = params[:customer_name]
-        p customer_address = params[:customer_address]
-        p customer_email = params[:customer_email]
-        p customer_phone = params[:customer_phone]
-        p order_status = params[:status]
-        p delete_order = params[:delete]
-        p orders_id = db.execute("select id from Orders").flatten
+        customer_name = params[:customer_name]
+        customer_address = params[:customer_address]
+        customer_email = params[:customer_email]
+        customer_phone = params[:customer_phone]
+        order_status = params[:status]
+        delete_order = params[:delete]
         orders_id.each do |order_id|
             db.execute("update Orders set name=:name,address=:address,email=:email,phone=:phone,status=:status where id=:id", {:name => customer_name[order_id.to_s], :address => customer_address[order_id.to_s], :email => customer_email[order_id.to_s], :phone => customer_phone[order_id.to_s], :status => order_status[order_id.to_s], :id => order_id}).flatten
             if delete_order != nil
@@ -283,7 +281,7 @@ get '/detect_article_id' do
     tyre_brand = params[:tyre_brand]
     tyre_family = params[:tyre_family]
     tyre_model = params[:tyre_model]
-    p tyre_provider = params[:tyre_provider]
+    tyre_provider = params[:tyre_provider]
     if tyre_provider.empty? == false
         @detected_article_id = db.execute("select id from TyreArticle where provider_id=:tyre_provider and model_id=(select id from TyreModel where canonical_size=:tyre_model and family_id=(select id from TyreFamily where brand_title=:brand_title and family_title=:family_title))", {:tyre_provider => tyre_provider.to_i, :tyre_model => tyre_model, :brand_title => tyre_brand, :family_title => tyre_family}).flatten.first.to_i
     end

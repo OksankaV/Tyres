@@ -2,13 +2,15 @@
 	function send_form()
 	{
 		$("#filter_form").submit();
-	}	
+	}
+		
 	function remove(select_name)
 	{	
 		var value = $("#filter_form").find('select[name^="' + select_name + '"]');
 		value.attr("value","");
 		send_form();
 	}
+	
 	function remove_checked(checkbox_name)
 	{	
 		if (checkbox_name == $("#filter_form").find('input[value^="' + checkbox_name + '"]').val())
@@ -25,9 +27,31 @@
 		send_form();
 	}
 	
-	function set_all_checked()
-	{	
-		$("input:checkbox").attr("checked","checked");
+	function show_all()
+	{
+		$('.hidden_brand').toggle();				 
+		if ($('.hidden_brand').is(':hidden'))
+		{
+			$("#show_all_brands").text(" Показати всі ");		 
+			$("#show_all_brands").append("<i class='icon-chevron-down'></i>");
+		}
+		else
+		{
+			$("#show_all_brands").text(" Показати популярні ");
+			$("#show_all_brands").append("<i class='icon-chevron-up'></i>");
+		}	
+	}
+	
+	function checked_all()
+	{			 
+		if ($("input:checkbox").is(':checked'))
+		{
+			$("input:checkbox").removeAttr("checked");
+		}
+		else
+		{
+			$("input:checkbox").attr("checked","checked");
+		}	
 		send_form();
 	}
 	
@@ -36,36 +60,25 @@
 		{
 			$('.hidden_brand').hide();
 			$("#show_all_brands").text(" Показати всі ");
-			$("#show_all_brands").prepend("<i class='icon-chevron-down'></i>");	
 			$("#show_all_brands").append("<i class='icon-chevron-down'></i>");
-			$("#show_all_brands").click(
-				function()
-				{
-					$('.hidden_brand').toggle();				 
-					if($('.hidden_brand').is(':hidden'))
-					{
-						$("#show_all_brands").text(" Показати всі ");
-						$("#show_all_brands").prepend("<i class='icon-chevron-down'></i>");			 
-						$("#show_all_brands").append("<i class='icon-chevron-down'></i>");
-					}
-					else
-					{
-						$("#show_all_brands").text(" Показати популярні ");
-						$("#show_all_brands").prepend("<i class='icon-chevron-up'></i>");
-						$("#show_all_brands").append("<i class='icon-chevron-up'></i>");
-					}	
-				}
-			)
+			if ($("input:checkbox").is(':checked'))
+			{
+				$("#checked_all_brands").text(" Скинути всі ");		 
+			}
+			else
+			{
+				$("#checked_all_brands").text(" Відмітити всі ");
+			}
 		}
 	)
 
 </script>
 <div class="row">
-	<form id="filter_form" method="GET" action="tyres" > 
-		<div class="span4">
+	<div class="span4">
+		<form id="filter_form" method="GET" action="tyres" > 
 			<%if ((@tyre_width.empty? == false and @tyre_width != nil) or (@tyre_height.empty? == false and @tyre_height != nil) or (@tyre_diameter.empty? == false and @tyre_diameter != nil) or (@tyre_season.empty? == false and @tyre_season != nil) or (@tyre_brand.empty? == false and @index_form == false))%>
 				<div class="well">
-					<h4>Обрані параметри:</h4>
+					<h5>Обрані параметри:</h5>
 					<%if @tyre_width.empty? == false and @tyre_width != nil%>
 							<span class="pull-left">
 								Ширина: <%=@tyre_width%>
@@ -133,9 +146,8 @@
 					<br>
 				</div>					
 			<%end%>		
-			<div class="well form-horizontal">
-				<h4>Ширина</h4> 
-				<i class="icon-resize-horizontal"></i>    
+			<div class="well">
+				<h5>Ширина</h5>  
 				<select class="input-medium" name="tyre_width" onchange="send_form()">
 					<option value="">Оберіть</option>
 					<%Tyre_width_name.each do |tyre_width_name|%>
@@ -146,8 +158,7 @@
 						<%end%>
 					<%end%>     
 				</select>
-				<h4>Висота</h4> 
-				<i class="icon-resize-vertical"></i> 
+				<h5>Висота</h5> 
 				<select class="input-medium" name="tyre_height" onchange="send_form()">
 					<option value="">Оберіть</option>
 					<%Tyre_height_name.each do |tyre_height_name|%>
@@ -158,20 +169,18 @@
 						<%end%> 
 					<%end%>    
 				</select>
-				<h4>Діаметр</h4> 
-				<i class="icon-resize-full"></i> 
+				<h5>Діаметр</h5> 
 				<select class="input-medium" name="tyre_diameter" onchange="send_form()">
 					<option value="">Оберіть</option>
 					<%Tyre_diameter_name.each do |tyre_diameter_name|%>
 						<%if @tyre_diameter == tyre_diameter_name.to_s%>
 							<option value="<%=tyre_diameter_name%>" selected><%=tyre_diameter_name%></option>   
 						<%else%>    
-		                    <option value="<%=tyre_diameter_name%>"><%=tyre_diameter_name%></option>  
+				        	<option value="<%=tyre_diameter_name%>"><%=tyre_diameter_name%></option>  
 						<%end%> 
 					<%end%>    
 				</select> 
-				<h4>Сезон</h4>
-				<i class="icon-asterisk"></i> 
+				<h5>Сезон</h5>
 				<select class="input-medium" name="tyre_season" onchange="send_form()">
 					<option value="">Оберіть</option>
 					<%Tyre_season.each do |key_tyre_season,value_tyre_season|%>
@@ -184,9 +193,8 @@
 				</select>
 			</div>
 			<div class="well form-horizontal">
-				<h4>Виробники</h4>
-				<button class="btn" onclick="set_all_checked()"><i class='icon-check'></i> Позначити всі</button>
-				<button class="btn" onclick="remove_all_checked()"><i class='icon-share'></i> Скинути всі</button>
+				<h5>Виробники</h5>
+				<button id="checked_all_brands" class="btn" onclick="checked_all()"></button>
 				<br><br>
 				<%Tyre_brand_name.sort.each do |tyre_brand_name|%>
 					<%if @tyre_brand.include?(tyre_brand_name.to_s) or @index_form == true%>
@@ -199,12 +207,12 @@
 						</label>
 					<%end%>  
 				<%end%>
-				<a id="show_all_brands"class="show_all"></a>
+				<a id="show_all_brands" onclick="show_all()"></a>
 			</div>
-		</div>
-            
-		<div class="span8">
-			<div class="well">
+		</form> 
+	</div>       
+	<div class="span8">
+		<div class="well">
 			<h4>Результати пошуку</h4>  
 			<%if @select_family.empty?%>
 				<p>Нічого не знайдено</p>
@@ -213,7 +221,6 @@
 					<li><a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=brand_family[1]%>&tyre_family=<%=brand_family[0]%>"><%=brand_family[1]%> - <%=brand_family[0]%></a></li>   
 				<%end%> 
 			<%end%>
-			</div>  
 		</div>  
-	</form>  
+	</div>  
 </div>      
