@@ -212,15 +212,24 @@
 		</form> 
 	</div>       
 	<div class="span8">
-		<div class="well">
 			<h4>Результати пошуку</h4>  
 			<%if @select_family.empty?%>
 				<p>Нічого не знайдено</p>
-			<%else%>      
-				<%@select_family.sort{|a,b| a[1]<=>b[1]}.each do |family_id,brand_family|%>
-					<li><a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=brand_family[1]%>&tyre_family=<%=brand_family[0]%>"><%=brand_family[1]%> - <%=brand_family[0]%></a></li>   
-				<%end%> 
-			<%end%>
-		</div>  
+			<%else%>
+				<%Tyre_brand_name.sort.each do |tyre_brand_name|%>
+					<%if @select_brand.has_value?(tyre_brand_name)%>	
+						<div class="row" align="center">
+							<h5><%=tyre_brand_name%></h5>
+							<%@select_family.each_pair do |family_id,family_name|%>
+								<%if tyre_brand_name == @select_brand[family_id]%>				
+								<div class="span4">
+									<a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=@select_brand[family_id]%>&tyre_family=<%=@select_family[family_id]%>"><%=@select_family[family_id]%></a>
+								</div>
+								<%end%>  	
+							<%end%>
+						</div>
+					<%end%>
+				<%end%>
+			<%end%> 
 	</div>  
 </div>      
