@@ -1,11 +1,45 @@
-        <form name="order" method="GET" action="/thanks_page">
+	<div class="span3"></div>
+	<div class="span5">        
+        <form class="form-horizontal" name="order" id="order_form" method="GET" action="/thanks_page">
+        	<fieldset>
+        	<div align="center">
+        		<legend>Оформити замовлення</legend>
+        	</div>
             <input name="form" type="hidden" value="order_form">
-            <p><b>Оформити замовлення</b></p>
-            <p>Імя</p><input name="customer_name" type="text" required>
-            <p>Адреса</p><input name="customer_address" type="text">
-            <p>Електронна адреса</p><input name="customer_email" type="text">
-            <p>Телефон</p><input name="customer_phone" type="text" required>
-            <p><a href="shopping_cart">Повернутися до кошика</a>
-            <input type="submit" value="Замовити"></p>
+            <div class="control-group">
+				<label class="control-label">Ім'я</label>
+				<div class="controls">
+					<input name="customer_name" type="text" required>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">Адреса</label>
+				<div class="controls">
+					<input name="customer_address" type="text">
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">Електронна адреса</label>
+				<div class="controls">
+					<input name="customer_email" type="text">
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">Телефон</label>
+				<div class="controls">
+					<input name="customer_phone" type="text" required>
+				</div>
+			</div>
+			<br>
+			<div align="center">
+				<input class="btn btn-large btn-inverse" type="submit" value="Замовити">
+				<br><br>
+				<a href="shopping_cart">
+					<i class="icon-chevron-left"></i>
+					 Повернутися до кошика 
+				</a>
+			</div>	
+		</fieldset>           
         </form>
+	</div>
 

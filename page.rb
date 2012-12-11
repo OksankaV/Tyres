@@ -93,13 +93,16 @@ get '/tyres' do
 		select_family_id = db.execute(select_family, @bind_hash).flatten.uniq
 		
 		@select_family = {}
+		@select_brand = {}
 		select_family_id.each do |family_id|
 		    select_family_title = db.execute("select family_title from TyreFamily where id=?",family_id)
 		    select_brand_title = db.execute("select brand_title from TyreFamily where id=?",family_id)
-		    @select_family[family_id] = ([select_family_title.to_s,select_brand_title.to_s])
+		    @select_family[family_id] = (select_family_title.to_s)
+		    @select_brand[family_id] = (select_brand_title.to_s)
 		end  
 	else
 		@select_family = {}
+		@select_brand = {}
 	end	
 	@show_hide_brands_class = {}
 	Tyre_brand_name.each do |tyre_brand|
