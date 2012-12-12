@@ -42,9 +42,9 @@
 			<thead>
 				<tr>
 					<th>Товар</th>
-					<th>Ціна за одиницю</th>
+					<th>Ціна</th>
 					<th>Кількість</th>
-					<th>Загальна ціна товару</th>
+					<th>Загальна ціна</th>
 					<th>Видалити</th>
 				</tr>
 			</thead>
@@ -70,13 +70,11 @@
 	</form>
 	<br>
 	<div align="center">
-		<a class="btn btn-large btn-inverse" href='/order'>
-			 Оформити замовлення 
-		</a> 
-		<br><br>
-		<a href="<%=@back_href%>">
-			<i class="icon-chevron-left"></i>
-			 Повернутися до покупок
+		<a class="btn btn-large" href="<%=@back_href%>">
+			<i class="icon-chevron-left"></i> Повернутися до покупок
 		</a>
+		<a class="btn btn-large btn-primary" href='/order'>
+			Оформити замовлення <i class="icon-chevron-right"></i>
+		</a> 
 
 	</div>  

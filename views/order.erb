@@ -1,5 +1,57 @@
-	<div class="span3"></div>
-	<div class="span5">        
+	<style>
+		label.error {
+			color: red;
+			margin-top: 2px;
+		}
+	</style>
+	<script>
+	$(document).ready(function()
+	{
+		$("#order_form").validate(
+		{
+			rules: 
+			{
+				customer_name: 
+				{
+					required: true
+				},
+				customer_email: 
+				{
+					email: true
+				},
+				customer_phone: 
+				{
+					required: true,
+				}
+			},
+			messages: 
+			{
+				customer_name: 
+				{
+					required: "Вкажіть, будь ласка, Ваше ім'я!"
+				},
+				customer_email: 
+				{
+					email: "Не коректний email!"
+				},
+				customer_phone: 
+				{
+					required: "Вкажіть, будь ласка, Ваш номер телефону!",
+				}
+			},
+			errorPlacement: 
+				function(error, element) 
+				{
+      				error.insertAfter(element.parent().find("span"));
+    			}
+		});
+	});
+	function submit_order_form()
+	{
+		$("#order_form").submit();
+	}
+	</script>
+	<div class="span7 offset2">        
         <form class="form-horizontal" name="order" id="order_form" method="GET" action="/thanks_page">
         	<fieldset>
         	<div align="center">
@@ -9,35 +61,38 @@
             <div class="control-group">
 				<label class="control-label">Ім'я</label>
 				<div class="controls">
-					<input name="customer_name" type="text" required>
+					<input id="customer_name" name="customer_name" type="text">
+					<span class="help-inline"><small class="muted">*обов'язкове</small></span>
 				</div>
 			</div>
 			<div class="control-group">
 				<label class="control-label">Адреса</label>
 				<div class="controls">
-					<input name="customer_address" type="text">
+					<input id="customer_address" name="customer_address" type="text">
+					<span class="help-inline"><small class="muted">*не обов'язкове</small></span>
 				</div>
 			</div>
 			<div class="control-group">
 				<label class="control-label">Електронна адреса</label>
 				<div class="controls">
-					<input name="customer_email" type="text">
+					<input id="customer_email" name="customer_email" type="text">
+					<span class="help-inline"><small class="muted">*не обов'язкове</small></span>
 				</div>
 			</div>
 			<div class="control-group">
 				<label class="control-label">Телефон</label>
 				<div class="controls">
-					<input name="customer_phone" type="text" required>
+					<input id="customer_phone" name="customer_phone" type="text">
+					<span class="help-inline"><small class="muted">*обов'язкове</small></span>
 				</div>
 			</div>
 			<br>
 			<div align="center">
-				<input class="btn btn-large btn-inverse" type="submit" value="Замовити">
-				<br><br>
-				<a href="shopping_cart">
+				<a class="btn btn-large" href="shopping_cart">
 					<i class="icon-chevron-left"></i>
 					 Повернутися до кошика 
 				</a>
+				<a class="btn btn-large btn-primary" onclick="submit_order_form()">Замовити <i class="icon-chevron-right"></i></a>
 			</div>	
 		</fieldset>           
         </form>
