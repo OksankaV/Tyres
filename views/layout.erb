@@ -24,20 +24,23 @@
 					<a class="brand" href="">БУЛІК</a>
 					<ul class="nav">
 						<li class="divider-vertical"></li>
-						<li><a href="">Шини</a></li>
+						<li><a href="/tyres?tyre_width=&tyre_height=&tyre_diameter=&tyre_brand=&tyre_family=&tyre_season=">Шини</a></li>
 						<li class="divider-vertical"></li>
 						<li><a href="">Диски</a></li>
 						<li class="divider-vertical"></li>
-						<li><a href="">Доставка</a></li>
+						<li><a href="/delivery">Доставка</a></li>
 						<li class="divider-vertical"></li>
-						<li><a href="">Кошик</a></li>
+					</ul>
+					<ul class="nav pull-right">
+						<li class="divider-vertical"></li>
+						<li><a href="/shopping_cart"><i class="icon-shopping-cart icon-white"></i> В кошику товарів: <%=session["all_quantity"]%> на суму <%=session["all_price"]%> грн.</a></li>
 						<li class="divider-vertical"></li>
 					</ul>
 				</div>
 			</div>
 		</div>   
     	<div class="container"> 
-			<%= yield %>
+<%= yield %>
 		</div> 
 	</body>
 </html>

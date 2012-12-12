@@ -25,8 +25,11 @@ Tyre_quantity = 4
 Status_Hash = { 0 => "Не виконано", 1 => "Підтверджено", 2 => "Відправлено", 3 => "Завершено"}
 Popular_tyre_brands = ["Bridgestone","Dunlop","Nokian"]
 
+
+
 get '/' do
     @title = "Головна"
+    shoping_cart_function()
     erb :index
 end
 
@@ -37,6 +40,27 @@ def filter_select(select, value, check_value, text, hash_key)
         @bind_hash[hash_key.to_sym] = value
     end  
     return select  
+end
+
+def shoping_cart_function()
+	cart_elements = {}
+	session.each_pair do |key,value|
+        if key =~ /\d+/ and value.class == Array
+            cart_elements[key] = value
+        end    
+    end
+
+    all_quantity = 0
+    all_price = 0.00
+    if cart_elements.empty? == false
+        cart_elements.each_value do |article|
+            all_quantity += article[4].to_i
+            all_price += article[5].to_f 
+        end  
+    end
+    session["all_quantity"] = all_quantity 
+    session["all_price"] = all_price 
+    return cart_elements
 end
 
 
@@ -190,22 +214,7 @@ get '/shopping_cart' do
             end
         end  
     end 
-
-    session.each_pair do |key,value|
-        if key =~ /\d+/ and value.class == Array
-            @cart_elements[key] = value
-        end    
-    end
-
-    @all_quantity = 0
-    @all_price = 0.00
-    if @cart_elements.empty? == false
-        @cart_elements.each_value do |article|
-            @all_quantity += article[4].to_i
-            @all_price += article[5].to_f  
-        end  
-    end
-    
+	@cart_elements = shoping_cart_function()
     erb :shopping_cart
 end
 
@@ -337,7 +346,7 @@ get '/orders_elements/:id' do
         @total_price[article_id] = row[4] * row[5]
         @order_elements[article_id] = row
     end
-    @order_price = 0.0
+    @order_price = 0.00
     @total_price.each_value do |element_price|
         @order_price += element_price 
     end
@@ -365,6 +374,9 @@ get '/thanks_page' do
                 db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(:order_id, :article_id, :price, :quantity)", {:order_id => order_id, :article_id => article_id, :price => propetries[3], :quantity => propetries[4]})    
             end
         end
+        session.clear
+        session["all_quantity"] = 0
+		session["all_price"] = 0.00
     end
     erb :thanks_page
 end
