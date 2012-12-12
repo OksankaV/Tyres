@@ -1,5 +1,4 @@
         <script>
-      
             function validate_form()
             {
                 var rows = $("tr");
@@ -32,13 +31,12 @@
                     } 
                 }
             }
-
         </script>   
-
-        <p><b>Список замовлень</b></p>
-        <form name="order_table_form" method="GET" action="" onsubmit="return validate_form()">
+		
+        <h4 align="center">Список замовлень</h4>
+        <form class="form-inline" name="order_table_form" method="GET" action="" onsubmit="return validate_form()">
             <input name="form" type="hidden" value="order_table_form">
-            <table id="orders_table" border="1">
+            <table class="table table-bordered" id="orders_table" border="1">
                 <tr>
                     <th>Номер</th>
                     <th>Покупець</th>
@@ -52,13 +50,13 @@
             <%@orders.sort.each do |order_id,order_data|%>
                 <tr>
                     <td onclick="document.location.href='orders_elements/<%=order_id%>'"><%=order_id%></td>
-                    <td><input name="customer_name[<%=order_id%>]" type="text"  type="text" value="<%=order_data[0]%>" size="10"></td> 
-                    <td><input name="customer_address[<%=order_id%>]" type="text"  type="text" value="<%=order_data[1]%>" size="10"></td> 
-                    <td><input name="customer_email[<%=order_id%>]" type="text"  type="text" value="<%=order_data[2]%>" size="10"></td>
-                    <td><input name="customer_phone[<%=order_id%>]" type="text"  type="text" value="<%=order_data[3]%>" size="10"></td>  
+                    <td><input class="input-medium" name="customer_name[<%=order_id%>]" type="text"  type="text" value="<%=order_data[0]%>" size="10"></td> 
+                    <td><input class="input-medium" name="customer_address[<%=order_id%>]" type="text"  type="text" value="<%=order_data[1]%>" size="10"></td> 
+                    <td><input class="input-medium" name="customer_email[<%=order_id%>]" type="text"  type="text" value="<%=order_data[2]%>" size="10"></td>
+                    <td><input class="input-medium" name="customer_phone[<%=order_id%>]" type="text"  type="text" value="<%=order_data[3]%>" size="10"></td>  
                     <td onclick="document.location.href='orders_elements/<%=order_id%>'"><%=order_data[4]%></td>
                     <td>
-                        <select name="status[<%=order_id%>]">
+                        <select class="input-medium" name="status[<%=order_id%>]">
                             <%Status_Hash.each_pair do |status_key,status_value|%>
                                 <%if order_data[5] == status_key%>
                                     <option value="<%=status_key%>" selected><%=status_value%></option>
@@ -73,5 +71,7 @@
             <%end%>
             </table>
             <br>
-            <input type="submit" value="Оновити дані">
+            <div align="center">
+            	<input class="btn btn-large btn-primary" type="submit" value="Оновити дані">
+            </div>	
         </form>

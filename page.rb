@@ -224,6 +224,7 @@ get '/orders_table' do
         customer_phone = params[:customer_phone]
         order_status = params[:status]
         delete_order = params[:delete]
+        orders_id = db.execute("select id from Orders").flatten
         orders_id.each do |order_id|
             db.execute("update Orders set name=:name,address=:address,email=:email,phone=:phone,status=:status where id=:id", {:name => customer_name[order_id.to_s], :address => customer_address[order_id.to_s], :email => customer_email[order_id.to_s], :phone => customer_phone[order_id.to_s], :status => order_status[order_id.to_s], :id => order_id}).flatten
             if delete_order != nil
@@ -312,7 +313,7 @@ get '/orders_elements/:id' do
         end
         db.execute("commit")   
     end
-    @customer_data = db.execute("select name,address,email,phone from Orders where id=?", @order_id)
+    @customer_data = db.execute("select name,address,email,phone from Orders where id=?", @order_id).flatten
     order_elements = db.execute("select article_id,price,quantity from OrdersElements where order_id=?", @order_id)
     @order_elements  = {}
     @family_value = {}
@@ -356,7 +357,7 @@ get '/thanks_page' do
         customer_address = params[:customer_address]
         customer_email = params[:customer_email]
         customer_phone = params[:customer_phone]
-        order_date = Time.now.strftime("%d/%m/%Y %H:%M:%S")
+        order_date = Time.now.strftime("%d/%m/%Y&nbsp;%H:%M:%S")
         db.execute("insert into Orders(name, address, email, phone, date, status) values(:name, :address, :email, :phone, :date, :status)", {:name => customer_name, :address => customer_address, :email => customer_email, :phone => customer_phone, :date => order_date, :status => 0})
         order_id = db.execute("select id from Orders where phone=? and name=? and date=?", [customer_phone, customer_name, order_date]).to_s.to_i
         session.each_pair do |article_id,propetries|
@@ -378,20 +379,20 @@ __END__
 
 
 @@ article_family
-<option value="" selected>Оберіть модель</option>
+<option value="" selected>Модель</option>
 <%@families.each do |family|%>
     <option value="<%=family%>"><%=family%></option>   
 <%end%>
 
 
 @@ article_model
-<option value="" selected>Оберіть розміри</option>
+<option value="" selected>Розмір</option>
 <%@models.each do |model|%>
     <option value="<%=model%>"><%=model%></option>   
 <%end%>
 
 @@ article_provider
-<option value="" selected>Оберіть провайдера</option>
+<option value="" selected>Провайдер</option>
 <%@providers.each do |id,provider|%>
     <option value="<%=id%>"><%=provider%></option>   
 <%end%>

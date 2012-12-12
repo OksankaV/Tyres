@@ -1,35 +1,35 @@
     <td>
-        <select name="tyre_brand[<%=@id%>]" onchange="change_families('<%=@id%>')">
-            <option value="">Оберіть виробника</option>
+        <select class="input-medium" name="tyre_brand[<%=@id%>]" onchange="change_families('<%=@id%>')">
+            <option value="">Виробник</option>
             <%Tyre_brand_name.each do |tyre_brand_name|%>    
                 <option value="<%=tyre_brand_name%>"><%=tyre_brand_name%></option>  
             <%end%>
         </select>
         <select name="tyre_family[<%=@id%>]" onchange="change_models('<%=@id%>')">
-            <option value="">Оберіть модель</option>
+            <option value="">Модель</option>
             <%Tyre_family_name.each do |tyre_family_name|%>    
                 <option value="<%=tyre_family_name%>"><%=tyre_family_name%></option>  
             <%end%>
         </select>
         <select name="tyre_model[<%=@id%>]" onchange="change_providers('<%=@id%>')">
-            <option value="">Оберіть розмір</option>
+            <option value="">Розмір</option>
             <%Tyre_canonical_size.each do |tyre_model_name|%>    
                 <option value="<%=tyre_model_name%>"><%=tyre_model_name%></option>  
             <%end%>
         </select>
     </td>
     <td>                        
-        <select name="tyre_provider[<%=@id%>]" onchange="detect_article_id('<%=@id%>')">
-            <option value="">Оберіть провайдера</option>
+        <select class="input-medium" name="tyre_provider[<%=@id%>]" onchange="detect_article_id('<%=@id%>')">
+            <option value="">Провайдер</option>
             <%Tyre_providers.each do |tyre_provider_id,tyre_provider_title|%>    
                 <option value="<%=tyre_provider_id%>"><%=tyre_provider_title%></option> 
             <%end%>
         </select>      
     </td>
-    <td><div name="price[<%=@id%>]">0.00</div></td>
-    <td><input name="quantity[<%=@id%>]" type="text" value="4" size="3"></td> 
+    <td><div name="price[<%=@id%>]">0.00 грн.</div></td>
+    <td><input class="span1" name="quantity[<%=@id%>]" type="text" value="4" size="3"></td> 
     <td>
-        <div name="total_price[<%=@id%>]">0.00</div>
+        <div name="total_price[<%=@id%>]">0.00 грн.</div>
     </td>
     <td><input name="delete[<%=@id%>]" type="checkbox" value="<%=@id%>" >
         <div name="article_id[<%=@id%>]">

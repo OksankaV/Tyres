@@ -136,24 +136,26 @@
            </script>   
 
         <%i = 0%>  
-        <p><%=@customer_data.join(" ")%></p>
-        <form name="one_order_form" method="GET" action="" onsubmit="return validate_form()">
+        <%@customer_data.each do |customer_data|%>
+        		<h5><%=customer_data%></h5>
+        <%end%>
+        <form class="form-inline" name="one_order_form" method="GET" action="" onsubmit="return validate_form()">
             <input name="form" type="hidden" value="one_order_form">
-            <table id="order_elements_table" border="1">
+            <table class="table table-bordered" id="order_elements_table" border="1">
             <tbody>
                 <tr id="0">
                     <th>Товар</th>
                     <th>Провайдер</th>
                     <th>Ціна</th>
                     <th>Кількість</th>
-                    <th>Загальна вартість</th>
+                    <th>Вартість</th>
                     <th>Видалити</th>
                 </tr>
              
             <%@order_elements.sort.each do |article_id,article_data|%>
                 <tr id="<%=i = i+1%>">
                     <td>
-                        <select name="tyre_brand[<%=article_id%>]" onchange="change_families(<%=article_id%>)">
+                        <select class="input-medium" name="tyre_brand[<%=article_id%>]" onchange="change_families(<%=article_id%>)">
                             <%Tyre_brand_name.each do |tyre_brand_name|%>
                                 <%if article_data[0] == tyre_brand_name%>
                                     <option value="<%=tyre_brand_name%>" selected><%=tyre_brand_name%></option>
@@ -184,7 +186,7 @@
                         </select>        
                     </td>
                     <td>                        
-                        <select name="tyre_provider[<%=article_id%>]" onchange="detect_article_id(<%=article_id%>)">
+                        <select class="input-medium" name="tyre_provider[<%=article_id%>]" onchange="detect_article_id(<%=article_id%>)">
                         <%provider_value = @provider_value[article_id]%>
                             <%provider_value.sort.each do |tyre_provider_id,tyre_provider_title|%>
                                 <%if article_data[3] == tyre_provider_id%>
@@ -196,13 +198,13 @@
                         </select>       
                     </td>
                     <td>
-                        <div name="price[<%=article_id%>]"><%=article_data[4]%></div>
+                        <div name="price[<%=article_id%>]"><%=article_data[4]%> грн.</div>
                     </td>
                     <td>
-                        <input name="quantity[<%=article_id%>]" type="text" value="<%=article_data[5].to_i%>" size="3">
+                        <input class="span1" name="quantity[<%=article_id%>]" type="text" value="<%=article_data[5].to_i%>" size="3">
                     </td>
                     <td>
-                        <div name="total_price[<%=article_id%>]"><%=@total_price[article_id]%></div>
+                        <div name="total_price[<%=article_id%>]"><%=@total_price[article_id]%> грн.</div>
                     </td>
                     <td>
                         <input name="delete[<%=article_id%>]" type="checkbox" value="<%=article_id%>">
@@ -215,8 +217,10 @@
             </tbody>
             </table>
             <br>
-                <div name="order_price">Всього до сплати: <%=@order_price%> грн.</div>
+                <strong><div name="order_price">Всього до сплати: <%=@order_price%> грн.</div></strong>
             <br>
-            <input id="add_button" type="button" value="Додати новий рядок" onclick="add_new_row(<%=i=i+1%>)">
-            <input type="submit" value="Оновити дані" >
+            <div align="center">
+            	<input class="btn btn-large" id="add_button" type="button" value="Додати новий рядок" onclick="add_new_row(<%=i=i+1%>)">
+            	<input class="btn btn-large btn-primary" type="submit" value="Оновити дані" >
+            </div>
         </form>
