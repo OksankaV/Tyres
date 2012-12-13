@@ -1,8 +1,4 @@
 	<style>
-		label.error {
-			color: red;
-			margin-bottom: -5px;
-		}
 		.form-horizontal .controls 
 		{
     		margin-left: 45%;
@@ -10,6 +6,9 @@
 		.form-horizontal .control-label 
 		{
 			width: 40%;
+		}
+		.alert-danger, .alert-error {
+			margin-bottom: -3px;
 		}
 	</style>
 	<script>
@@ -26,7 +25,15 @@
 				},
 				customer_email: 
 				{
-					email: true
+					email: true,
+					required: 
+					function() 
+					{	
+						$("<small class='muted'>не обов'язково</small>").replaceAll($("#customer_email").parent().find("small"));
+						$("<small class='muted'>не обов'язково</small>").replaceAll($("#customer_email").parent().find("label"));
+						$("#customer_email").parent().parent().attr("class","control-group");
+						return false;
+					} 
 				},
 				customer_phone: 
 				{
@@ -41,7 +48,7 @@
 				},
 				customer_email: 
 				{
-					email: "Не коректний email!"
+					email: "Не коректний email!",
 				},
 				customer_phone: 
 				{
@@ -51,8 +58,21 @@
 			errorPlacement: 
 				function(error, element) 
 				{
-      				error.prependTo(element.parent().find("small"));
-    			}
+					element.parent().parent().attr("class","control-group error");	
+      				error.replaceAll(element.parent().find("small"));
+    			},
+			success: function(label) 
+			{
+     			label.parent().parent().parent().attr("class","control-group");
+     			if (label.attr("for")=="customer_email")
+     			{
+     				$("<small class='muted'>не обов'язково</small>").replaceAll(label);
+     			}
+     			else
+     			{
+     				$("<small class='muted'>обов'язково</small>").replaceAll(label);	
+     			}	
+			}
 		});
 	});
 	function submit_order_form()
