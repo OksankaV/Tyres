@@ -62,19 +62,18 @@
 		</table>
 		<div class="row-fluid">
 			<div class="pull-left">
-			<strong>Всього товарів: <%=@all_quantity%> на суму <%=@all_price%> грн.</strong>
+			<strong>Всього товарів: <%=session["all_quantity"]%> на суму <%=session["all_price"]%> грн.</strong>
 			</div>
 			<input name="back_href" type="hidden" value="<%=@back_href%>">
 			<a class="btn pull-right" onclick="submit_cart()"><i class="icon-refresh"></i> Перерахувати</a>
 		</div>	
 	</form>
 	<br>
-	<div align="center">
-		<a class="btn btn-large" href="<%=@back_href%>">
+	<div class="row-fluid">
+		<a class="btn btn-large pull-left" href="<%=@back_href%>">
 			<i class="icon-chevron-left"></i> Повернутися до покупок
 		</a>
-		<a class="btn btn-large btn-primary" href='/order'>
+		<a class="btn btn-large btn-primary pull-right" href='/order'>
 			Оформити замовлення <i class="icon-chevron-right icon-white"></i>
 		</a> 
-
 	</div>  

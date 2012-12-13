@@ -1,7 +1,15 @@
 	<style>
 		label.error {
 			color: red;
-			margin-top: 2px;
+			margin-bottom: -5px;
+		}
+		.form-horizontal .controls 
+		{
+    		margin-left: 45%;
+		}
+		.form-horizontal .control-label 
+		{
+			width: 40%;
 		}
 	</style>
 	<script>
@@ -9,6 +17,7 @@
 	{
 		$("#order_form").validate(
 		{
+			onkeyup: false,
 			rules: 
 			{
 				customer_name: 
@@ -42,7 +51,7 @@
 			errorPlacement: 
 				function(error, element) 
 				{
-      				error.insertAfter(element.parent().find("span"));
+      				error.prependTo(element.parent().find("small"));
     			}
 		});
 	});
@@ -50,8 +59,7 @@
 	{
 		$("#order_form").submit();
 	}
-	</script>
-	<div class="span7 offset2">        
+	</script>   
         <form class="form-horizontal" name="order" id="order_form" method="GET" action="/thanks_page">
         	<fieldset>
         	<div align="center">
@@ -62,28 +70,28 @@
 				<label class="control-label">Ім'я</label>
 				<div class="controls">
 					<input id="customer_name" name="customer_name" type="text">
-					<span class="help-inline"><small class="muted">*обов'язкове</small></span>
+					<span class="help-inline"><small class="muted">обов'язково</small></span>
 				</div>
 			</div>
 			<div class="control-group">
 				<label class="control-label">Адреса</label>
 				<div class="controls">
 					<input id="customer_address" name="customer_address" type="text">
-					<span class="help-inline"><small class="muted">*не обов'язкове</small></span>
+					<span class="help-inline"><small class="muted">не обов'язково</small></span>
 				</div>
 			</div>
 			<div class="control-group">
 				<label class="control-label">Електронна адреса</label>
 				<div class="controls">
 					<input id="customer_email" name="customer_email" type="text">
-					<span class="help-inline"><small class="muted">*не обов'язкове</small></span>
+					<span class="help-inline"><small class="muted">не обов'язково</small></span>
 				</div>
 			</div>
 			<div class="control-group">
 				<label class="control-label">Телефон</label>
 				<div class="controls">
 					<input id="customer_phone" name="customer_phone" type="text">
-					<span class="help-inline"><small class="muted">*обов'язкове</small></span>
+					<span class="help-inline"><small class="muted">обов'язково</small></span>
 				</div>
 			</div>
 			<br>
@@ -96,5 +104,4 @@
 			</div>	
 		</fieldset>           
         </form>
-	</div>
 
