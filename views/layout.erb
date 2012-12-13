@@ -33,7 +33,11 @@
 					</ul>
 					<ul class="nav pull-right">
 						<li class="divider-vertical"></li>
-						<li><a href="/shopping_cart"><i class="icon-shopping-cart icon-white"></i> В кошику товарів: <%=session["all_quantity"]%> на суму <%=session["all_price"]%> грн.</a></li>
+						<%if session["all_quantity"] == 0%>
+							<li><a><i class="icon-shopping-cart icon-white"></i> Кошик порожній</a></li>
+						<%else%>
+							<li><a href="/shopping_cart"><i class="icon-shopping-cart icon-white"></i> В кошику товарів: <%=session["all_quantity"]%> на суму <%=session["all_price"]%> грн.</a></li>
+						<%end%>
 						<li class="divider-vertical"></li>
 					</ul>
 				</div>
