@@ -29,8 +29,8 @@
 					required: 
 					function() 
 					{	
-						$("<small class='muted'>не обов'язково</small>").replaceAll($("#customer_email").parent().find("small"));
-						$("<small class='muted'>не обов'язково</small>").replaceAll($("#customer_email").parent().find("label"));
+						$("<%=Necessery_Order[1]%>").replaceAll($("#customer_email").parent().find("small"));
+						$("<%=Necessery_Order[1]%>").replaceAll($("#customer_email").parent().find("label"));
 						$("#customer_email").parent().parent().attr("class","control-group");
 						return false;
 					} 
@@ -66,11 +66,11 @@
      			label.parent().parent().parent().attr("class","control-group");
      			if (label.attr("for")=="customer_email")
      			{
-     				$("<small class='muted'>не обов'язково</small>").replaceAll(label);
+     				$("<%=Necessery_Order[1]%>").replaceAll(label);
      			}
      			else
      			{
-     				$("<small class='muted'>обов'язково</small>").replaceAll(label);	
+     				$("<%=Necessery_Order[0]%>").replaceAll(label);	
      			}	
 			}
 		});
@@ -80,38 +80,38 @@
 		$("#order_form").submit();
 	}
 	</script>   
-        <form class="form-horizontal" name="order" id="order_form" method="GET" action="/thanks_page">
+        <form class="form-horizontal" name="order" id="order_form" method="GET" action="">
         	<fieldset>
         	<div align="center">
         		<legend>Оформити замовлення</legend>
         	</div>
             <input name="form" type="hidden" value="order_form">
-            <div class="control-group">
+            <div class="<%=@control_group['control_name'].first%>">
 				<label class="control-label">Ім'я</label>
 				<div class="controls">
-					<input id="customer_name" name="customer_name" type="text">
-					<span class="help-inline"><small class="muted">обов'язково</small></span>
+					<input id="customer_name" name="customer_name" type="text" value="<%=@input_value['control_name']%>">
+					<span class="help-inline"><%=@control_group['control_name'].last%></span>
 				</div>
 			</div>
 			<div class="control-group">
 				<label class="control-label">Адреса</label>
 				<div class="controls">
 					<input id="customer_address" name="customer_address" type="text">
-					<span class="help-inline"><small class="muted">не обов'язково</small></span>
+					<span class="help-inline"><%=Necessery_Order[1]%></span>
 				</div>
 			</div>
-			<div class="control-group">
+			<div class="<%=@control_group['control_email'].first%>">
 				<label class="control-label">Електронна адреса</label>
 				<div class="controls">
-					<input id="customer_email" name="customer_email" type="text">
-					<span class="help-inline"><small class="muted">не обов'язково</small></span>
+					<input id="customer_email" name="customer_email" type="text" value="<%=@input_value['control_email']%>">
+					<span class="help-inline"><%=@control_group['control_email'].last%></span>
 				</div>
 			</div>
-			<div class="control-group">
+			<div class="<%=@control_group['control_phone'].first%>">
 				<label class="control-label">Телефон</label>
 				<div class="controls">
-					<input id="customer_phone" name="customer_phone" type="text">
-					<span class="help-inline"><small class="muted">обов'язково</small></span>
+					<input id="customer_phone" name="customer_phone" type="text" value="<%=@input_value['control_phone']%>">
+					<span class="help-inline"><%=@control_group['control_phone'].last%></span>
 				</div>
 			</div>
 			<br>

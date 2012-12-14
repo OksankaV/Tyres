@@ -24,8 +24,8 @@ Select_Array = ['Ширина', 'Висота', 'Діаметр', 'Виробн�
 Tyre_quantity = 4
 Status_Hash = { 0 => "Не виконано", 1 => "Підтверджено", 2 => "Відправлено", 3 => "Завершено"}
 Popular_tyre_brands = ["Bridgestone","Dunlop","Nokian"]
-
-
+Necessery_Order = ["<small class='muted'>обов'язково</small>", "<small class='muted'>не обов'язково</small>"]
+Order_Error_Messages = ["Вкажіть, будь ласка, Ваше ім'я!", "Не коректний email!", "Вкажіть, будь ласка, Ваш номер телефону!"]
 
 get '/' do
     @title = "Головна"
@@ -220,6 +220,46 @@ end
 
 get '/order' do
     @title = "Оформлення замовлення"
+    @control_group = {"control_name" => ["control-group", Necessery_Order[0]], "control_phone" => ["control-group",Necessery_Order[0]],"control_email" => ["control-group", Necessery_Order[1]]}
+    @input_value = {"control_name" => "", "control_phone" => "","control_email" => ""}
+    form = params[:form] 
+    if form == "order_form" 
+    	if ((params[:customer_name].empty? or params[:customer_name] == nil) or (params[:customer_phone].empty? or params[:customer_phone] == nil) or ((/^([a-z0-9_-]+\.)*[a-z0-9_-]+@[a-z0-9_-]+(\.[a-z0-9_-]+)*\.[a-z]{2,4}$/.match(params[:customer_email]) == nil) and params[:customer_email].empty? == false))
+    		if (params[:customer_name].empty? or params[:customer_name] == nil)
+    			@control_group["control_name"] = ["control-group error", Order_Error_Messages[0]]
+    		else
+    			@input_value["control_name"] = params[:customer_name]
+    		end
+    		if (params[:customer_phone].empty? or params[:customer_phone] == nil)
+    			@control_group["control_phone"] = ["control-group error", Order_Error_Messages[2]]
+    		else
+    			@input_value["control_phone"] = params[:customer_phone]	
+    		end
+    		if ((/^([a-z0-9_-]+\.)*[a-z0-9_-]+@[a-z0-9_-]+(\.[a-z0-9_-]+)*\.[a-z]{2,4}$/.match(params[:customer_email]) == nil) and params[:customer_email].empty? == false)
+    			@control_group["control_email"] = ["control-group error", Order_Error_Messages[1]]
+    			@input_value["control_email"] = params[:customer_email]
+    		else	
+    			@input_value["control_email"] = params[:customer_email]	
+    		end
+    	else
+        customer_name = params[:customer_name]
+        customer_address = params[:customer_address]
+        customer_email = params[:customer_email]
+        customer_phone = params[:customer_phone]
+        order_date = Time.now.strftime("%d/%m/%Y&nbsp;%H:%M:%S")
+        db.execute("insert into Orders(name, address, email, phone, date, status) values(:name, :address, :email, :phone, :date, :status)", {:name => customer_name, :address => customer_address, :email => customer_email, :phone => customer_phone, :date => order_date, :status => 0})
+        order_id = db.execute("select id from Orders where phone=? and name=? and date=?", [customer_phone, customer_name, order_date]).to_s.to_i
+        session.each_pair do |article_id,propetries|
+            if article_id =~ /\d+/ and propetries.class == Array 
+                db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(:order_id, :article_id, :price, :quantity)", {:order_id => order_id, :article_id => article_id, :price => propetries[3], :quantity => propetries[4]})    
+            end
+        end
+        session.clear
+        session["all_quantity"] = 0
+		session["all_price"] = 0.00
+		redirect to('/thanks_page')
+		end
+    end
     erb :order
 end
 
@@ -360,24 +400,6 @@ end
 
 get '/thanks_page' do
     @title = "Дякуємо"
-    form = params[:form] 
-    if form == "order_form" 
-        customer_name = params[:customer_name]
-        customer_address = params[:customer_address]
-        customer_email = params[:customer_email]
-        customer_phone = params[:customer_phone]
-        order_date = Time.now.strftime("%d/%m/%Y&nbsp;%H:%M:%S")
-        db.execute("insert into Orders(name, address, email, phone, date, status) values(:name, :address, :email, :phone, :date, :status)", {:name => customer_name, :address => customer_address, :email => customer_email, :phone => customer_phone, :date => order_date, :status => 0})
-        order_id = db.execute("select id from Orders where phone=? and name=? and date=?", [customer_phone, customer_name, order_date]).to_s.to_i
-        session.each_pair do |article_id,propetries|
-            if article_id =~ /\d+/ and propetries.class == Array 
-                db.execute("insert into OrdersElements(order_id, article_id, price, quantity) values(:order_id, :article_id, :price, :quantity)", {:order_id => order_id, :article_id => article_id, :price => propetries[3], :quantity => propetries[4]})    
-            end
-        end
-        session.clear
-        session["all_quantity"] = 0
-		session["all_price"] = 0.00
-    end
     erb :thanks_page
 end
 
