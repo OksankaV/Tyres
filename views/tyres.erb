@@ -212,22 +212,29 @@
 		</form> 
 	</div>       
 	<div class="span8">
-			<h4>Результати пошуку</h4>  
+			<h4>Результати пошуку</h4>
 			<%if @select_family.empty?%>
 				<p>Нічого не знайдено</p>
 			<%else%>
 				<%Tyre_brand_name.sort.each do |tyre_brand_name|%>
 					<%if @select_brand.has_value?(tyre_brand_name)%>	
 						<div class="row" align="center">
-							<h5><%=tyre_brand_name%></h5>
+							<h4><%=tyre_brand_name%></h4>
+							<br>
 							<%@select_family.each_pair do |family_id,family_name|%>
 								<%if tyre_brand_name == @select_brand[family_id]%>				
-								<div class="span4">
-									<a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=@select_brand[family_id]%>&tyre_family=<%=@select_family[family_id]%>"><%=@select_family[family_id]%></a>
+								<div class="span4 inline">
+									<a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=@select_brand[family_id]%>&tyre_family=<%=@select_family[family_id]%>">
+										<strong><%=@select_family[family_id]%></strong>	
+										<strong class="text-success">(<%=@min_price[family_id]%> - <%=@max_price[family_id]%> грн.)</strong>								
+									</a>
+									
 								</div>
 								<%end%>  	
 							<%end%>
+							<br>
 						</div>
+						<br>
 					<%end%>
 				<%end%>
 			<%end%> 

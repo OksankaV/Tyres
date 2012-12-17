@@ -21,7 +21,7 @@
 			</tr>
     	</thead>
     	<tbody>
-		<%@article.each_pair do |article_id,propetries|%>
+		<%@article.sort{|a,b| a[1].first<=>b[1].first}.each do |article_id,propetries|%>
 			<tr>
 			<form name="buy_form" method="GET" action="/shopping_cart">
 				<input name="form" type="hidden" value="buy_form">

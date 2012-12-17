@@ -118,11 +118,22 @@ get '/tyres' do
 		
 		@select_family = {}
 		@select_brand = {}
+		@min_price = {}
+		@max_price = {}
 		select_family_id.each do |family_id|
 		    select_family_title = db.execute("select family_title from TyreFamily where id=?",family_id)
 		    select_brand_title = db.execute("select brand_title from TyreFamily where id=?",family_id)
+		    select_model_id = db.execute("select id from TyreModel where family_id=?",family_id).flatten
+		    min_price = []
+			max_price = []
+		    select_model_id.each do |model_id|
+		    	min_price.push(db.execute("select min(price) from TyreArticle where model_id=?",model_id).flatten)
+				max_price.push(db.execute("select max(price) from TyreArticle where model_id=?",model_id).flatten)
+		    end
 		    @select_family[family_id] = (select_family_title.to_s)
 		    @select_brand[family_id] = (select_brand_title.to_s)
+			@min_price[family_id] = min_price.flatten.each_with_index.min.first
+			@max_price[family_id] = max_price.flatten.each_with_index.max.first
 		end  
 	else
 		@select_family = {}
@@ -166,10 +177,12 @@ get '/family/:family_id' do
     @article = {}
     model_id_array.each do |model_id|
         select_canonical_size = db.execute("select canonical_size from TyreModel where id=?",model_id).flatten
-        select_price = db.execute("select max(price) from TyreArticle where model_id=?",model_id).flatten
-        select_quantity = db.execute("select quantity from TyreArticle where model_id=:model and price=:price", {:model => model_id, :price => select_price.first}).flatten
-        select_article_id = db.execute("select id from TyreArticle where model_id=:model and price=:price and quantity=:quantity",{:model => model_id, :price => select_price.first, :quantity => select_quantity.first}).flatten
-        @article[select_article_id] = [select_canonical_size.to_s,select_price.to_s,select_quantity.to_s]
+        select_price = db.execute("select price from TyreArticle where model_id=?",model_id).flatten
+        select_price.each do |price|
+		    select_quantity = db.execute("select quantity from TyreArticle where model_id=:model and price=:price", {:model => model_id, :price => price}).flatten
+		    select_article_id = db.execute("select id from TyreArticle where model_id=:model and price=:price and quantity=:quantity",{:model => model_id, :price => price, :quantity => select_quantity.first}).flatten
+		    @article[select_article_id] = [select_canonical_size.to_s,price.to_s,select_quantity.to_s]
+        end
     end
     erb :family
 end
