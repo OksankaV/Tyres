@@ -67,6 +67,13 @@ end
 get '/tyres' do
     @title = "Шини"
     @index_form = false
+    if params[:sort_param] == nil
+    	@sort_param = "brand"
+    elsif params[:sort_param].empty?
+    	@sort_param = "brand"
+    else	
+    	@sort_param = params[:sort_param]
+    end
     if params[:tyre_brand] != nil 
     	if params[:tyre_brand] != ""
         	@tyre_brand = params[:tyre_brand].to_a
@@ -134,7 +141,13 @@ get '/tyres' do
 		    @select_brand[family_id] = (select_brand_title.to_s)
 			@min_price[family_id] = min_price.flatten.each_with_index.min.first
 			@max_price[family_id] = max_price.flatten.each_with_index.max.first
-		end  
+			if @min_price[family_id] == nil
+				@min_price[family_id] = 0.0
+			end
+			if @max_price[family_id] == nil
+				@max_price[family_id] = 0.0
+			end
+		end
 	else
 		@select_family = {}
 		@select_brand = {}

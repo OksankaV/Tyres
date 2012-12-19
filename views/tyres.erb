@@ -71,8 +71,41 @@
 			}
 		}
 	)
-
+	
+	function setAttr(prmName,val){
+    var res = '';
+	var d = location.href.split("#")[0].split("?");  
+	var base = d[0];
+	var query = d[1];
+	if(query) {
+		var params = query.split("&");  
+		for(var i = 0; i < params.length; i++) {  
+			var keyval = params[i].split("=");  
+			if(keyval[0] != prmName) {  
+				res += params[i] + '&';
+			}
+		}
+	}
+	res += prmName + '=' + val;
+	window.location.href = base + '?' + res;
+	return false;
+} 
 </script>
+<style>
+	.well_family 
+	{
+		background-color: #FFFFFF;
+		border: 1px solid #FFFFFF;
+		border-radius: 4px 4px 4px 4px;
+		box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05) inset;
+		margin-bottom: 10px;
+		min-height: 10px;
+		padding: 4px;
+	}
+	.muted_family {
+    color: #444444;
+}
+</style>
 <div class="row">
 	<div class="span4">
 		<form id="filter_form" method="GET" action="tyres" > 
@@ -212,31 +245,110 @@
 		</form> 
 	</div>       
 	<div class="span8">
-			<h4>Результати пошуку</h4>
+			<h4 align="center">Результати пошуку</h4>
+			<br>
 			<%if @select_family.empty?%>
-				<p>Нічого не знайдено</p>
-			<%else%>
+				<p align="center">Нічого не знайдено</p>
+			<%elsif @sort_param == 'brand'%>
+				<div align="center">
+					Сортувати:
+					<a href="#" onclick="return setAttr('sort_param','low_price')"><small>Від дешевшого до дорожчого</small></a>&nbsp;|&nbsp;
+					<a href="#" onclick="return setAttr('sort_param','high_price')"><small>Від дорожчого до дешевшого</small></a>&nbsp;|&nbsp;
+					<small>По брендам</small>
+				</div>
+				<br>
 				<%Tyre_brand_name.sort.each do |tyre_brand_name|%>
-					<%if @select_brand.has_value?(tyre_brand_name)%>	
+					<%if @select_brand.has_value?(tyre_brand_name)%>
 						<div class="row" align="center">
-							<h4><%=tyre_brand_name%></h4>
-							<br>
-							<%@select_family.each_pair do |family_id,family_name|%>
-								<%if tyre_brand_name == @select_brand[family_id]%>				
-								<div class="span4 inline">
-									<a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=@select_brand[family_id]%>&tyre_family=<%=@select_family[family_id]%>">
-										<strong><%=@select_family[family_id]%></strong>	
-										<strong class="text-success">(<%=@min_price[family_id]%> - <%=@max_price[family_id]%> грн.)</strong>								
+							<%id = @select_brand.index(tyre_brand_name)%>
+							<%if @select_family[id].empty? == false%>
+								<h5><%=tyre_brand_name%></h5>	
+							<%end%>				
+							<%@select_family.sort{|a,b| a[1]<=>b[1]}.each do |family_id|%>
+								<%if tyre_brand_name.to_s == @select_brand[family_id.first].to_s and @min_price[family_id.first] != 0.0 and @max_price[family_id.first] != 0.0%>			
+								<div class="span4">
+									<div class="well_family">
+									<a href="/family/<%=family_id.first%>?family_id=<%=family_id.first%>&tyre_brand=<%=@select_brand[family_id.first]%>&tyre_family=<%=@select_family[family_id.first]%>">
+										<%=@select_family[family_id.first]%>
+										<%if @min_price[family_id.first] == @max_price[family_id.first]%>
+											<span class="muted_family">
+												(<%=@max_price[family_id.first]%>&nbsp;грн.)		
+											</span>			
+										<%else%>
+											<span class="muted_family">
+												(<%=@min_price[family_id.first]%>&nbsp;-&nbsp;<%=@max_price[family_id.first]%>&nbsp;грн.)
+											</span>
+										<%end%>
 									</a>
-									
-								</div>
-								<%end%>  	
+									</div>
+								</div>	
+								<%end%>  
 							<%end%>
-							<br>
 						</div>
-						<br>
 					<%end%>
 				<%end%>
+			<%elsif @sort_param == 'low_price'%>
+				<div align="center">
+					Сортувати:
+					<small>Від дешевшого до дорожчого</small>&nbsp;|&nbsp;
+					<a href="#" onclick="return setAttr('sort_param','high_price')"><small>Від дорожчого до дешевшого</small></a>&nbsp;|&nbsp;
+					<a href="#" onclick="return setAttr('sort_param','brand')"><small>По брендам</small></a>
+				</div>
+				<br>
+				<div class="row" align="center">
+				<%@min_price.sort{|a,b| a[1]<=>b[1]}.each do |family_id,family_name|%>
+					<%if @min_price[family_id] != 0.0 and @max_price[family_id] != 0.0%>				
+					<div class="span4">
+						<div class="well_family">
+						<a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=@select_brand[family_id]%>&tyre_family=<%=@select_family[family_id]%>">
+							<%=@select_brand[family_id]%> / <%=@select_family[family_id]%>	
+							<%if @min_price[family_id] == @max_price[family_id]%>
+								<span class="muted_family">
+									(<%=@max_price[family_id]%>&nbsp;грн.)		
+								</span>			
+							<%else%>
+								<span class="muted_family">
+									(<%=@min_price[family_id]%>&nbsp;-&nbsp;<%=@max_price[family_id]%>&nbsp;грн.)
+								</span>
+							<%end%>
+						</div>			
+						</a>
+					</div>
+					<%end%>	
+				<%end%>
+				<br><br>
+				</div>
+			<%elsif @sort_param == 'high_price'%>
+				<div align="center">
+					Сортувати:
+					<a href="#" onclick="return setAttr('sort_param','low_price')"><small>Від дешевшого до дорожчого</small></a>&nbsp;|&nbsp;
+					<small>Від дорожчого до дешевшого</small>&nbsp;|&nbsp;
+					<a href="#" onclick="return setAttr('sort_param','brand')"><small>По брендам</small></a>
+				</div>
+				<br>
+				<div class="row" align="center">
+				<%@max_price.sort{|a,b| b[1]<=>a[1]}.each do |family_id,family_name|%>	
+					<%if @min_price[family_id] != 0.0 and @max_price[family_id] != 0.0%>			
+					<div class="span4">
+						<div class="well_family">
+						<a href="/family/<%=family_id%>?family_id=<%=family_id%>&tyre_brand=<%=@select_brand[family_id]%>&tyre_family=<%=@select_family[family_id]%>">
+							<%=@select_brand[family_id]%> / <%=@select_family[family_id]%>
+							<%if @min_price[family_id] == @max_price[family_id]%>
+								<span class="muted_family">
+									(<%=@min_price[family_id]%>&nbsp;грн.)
+								</span>						
+							<%else%>
+								<span class="muted_family">
+									(<%=@min_price[family_id]%>&nbsp;-&nbsp;<%=@max_price[family_id]%>&nbsp;грн.)
+								</span>
+							<%end%>	
+						</div>	
+						</a>
+					</div>
+					<%end%>	
+				<%end%>
+				<br><br>
+				</div>	
 			<%end%> 
 	</div>  
 </div>      
